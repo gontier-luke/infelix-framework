@@ -46,7 +46,7 @@ function dd(...$vars){
 }
 
 function sanitize($var){
-    return '\'' . htmlspecialchars($var) . '\'';
+    return '\'' . str_replace("\n", '</br>', htmlspecialchars($var)) . '\'';
 }
 
 function camelToSnake($input){
