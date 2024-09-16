@@ -200,22 +200,25 @@ class SCSSCompiler
     private function processVariables($scss)
     {
         $lines = explode("\n", $scss);
-        foreach ($lines as $line) {
-            if (preg_match('/^\s*\$(\w+)\s*:\s*(.+);$/', trim($line), $matches)) {
-                dump($matches);
+        foreach ($lines as &$line) {
+
+            if (preg_match('/^\s*(\$[\w;\-]+)\s*:\s*(.+);$/', trim($line), $matches)) {
                 $variableName = $matches[1];
                 $variableValue = $matches[2];
                 $this->variables[$variableName] = $this->evaluateExpressions($variableValue);
-                dump($matches);
+                continue;
+            }
+
+            // Remplacer les variables dans le SCSS
+            if(str_contains($line, '$')){
+                foreach ($this->variables as $variableName => $variableValue) {
+                    if (str_contains($line, $variableName)) {
+                        $line = str_replace($variableName, $variableValue, $line);
+                    }
+                }
             }
         }
-dd($this->variables);
-        foreach ($this->variables as $name => $value) {
-            dump($name);
-            $scss = preg_replace('/(' . $name . ')/', $value, $scss);
-        }
-        die();
-        return $scss;
+        return implode("\n", $lines);
     }
 
     private function processMixins($scss)

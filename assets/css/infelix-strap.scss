@@ -16,7 +16,7 @@ $container-max-width-xxl: 1200px;
 .container {
   width : 1400px;
 
-  @media (min-width: 1400px) {
+  @media (max-width: 1400px) {
     width: 100%;
   }
 
@@ -27,7 +27,7 @@ $container-max-width-xxl: 1200px;
   &-xxl{
     width : $container-max-width-xxl;
 
-    @media (min-width: $container-width-xxl) {
+    @media (max-width: $container-max-width-xxl) {
       width: 100%;
     }
   }
@@ -35,7 +35,7 @@ $container-max-width-xxl: 1200px;
   &-xl{
     width : $container-max-width-xl;
     
-    @media (min-width: $container-width-xl) {
+    @media (max-width: $container-max-width-xl) {
       width: 100%;
     }
   }
@@ -43,7 +43,7 @@ $container-max-width-xxl: 1200px;
   &-lg{
     width : $container-max-width-lg;
     
-    @media (min-width: $container-width-lg) {
+    @media (max-width: $container-max-width-lg) {
       width: 100%;
     }
   }
@@ -51,7 +51,7 @@ $container-max-width-xxl: 1200px;
   &-md{
     width : $container-max-width-md;
     
-    @media (min-width: $container-width-md) {
+    @media (max-width: $container-max-width-md) {
       width: 100%;
     }
   }
@@ -59,7 +59,7 @@ $container-max-width-xxl: 1200px;
   &-sm{
     width : $container-max-width-sm;
     
-    @media (min-width: $container-width-sm) {
+    @media (max-width: $container-max-width-sm) {
       width: 100%;
     }
   }
