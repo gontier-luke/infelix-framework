@@ -1,0 +1,11 @@
+@mixin make-container($width: $container-max-widths) {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 15px;
+  padding-left: 15px;
+  @media (min-width: $container-max-widths) {
+    max-width: $container-max-widths;
+  }
+
+}

@@ -1,0 +1,66 @@
+@import 'infelix-strap/functions';
+
+$container-max-width-sm: 540px;
+$container-max-width-md: 720px;
+$container-max-width-lg: 960px;
+$container-max-width-xl: 1140px;
+$container-max-width-xxl: 1200px;
+
+.container, .container-fluid, .container-xxl, .container-xl, .container-lg, .container-md, .container-sm {
+  padding: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  display: flex;
+}
+
+.container {
+  width : 1400px;
+
+  @media (min-width: 1400px) {
+    width: 100%;
+  }
+
+  &-fluid {
+    width: 100%;
+  }
+
+  &-xxl{
+    width : $container-max-width-xxl;
+
+    @media (min-width: $container-width-xxl) {
+      width: 100%;
+    }
+  }
+
+  &-xl{
+    width : $container-max-width-xl;
+    
+    @media (min-width: $container-width-xl) {
+      width: 100%;
+    }
+  }
+
+  &-lg{
+    width : $container-max-width-lg;
+    
+    @media (min-width: $container-width-lg) {
+      width: 100%;
+    }
+  }
+
+  &-md{
+    width : $container-max-width-md;
+    
+    @media (min-width: $container-width-md) {
+      width: 100%;
+    }
+  }
+
+  &-sm{
+    width : $container-max-width-sm;
+    
+    @media (min-width: $container-width-sm) {
+      width: 100%;
+    }
+  }
+}
