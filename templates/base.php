@@ -6,12 +6,12 @@
         <link rel="stylesheet" type="text/css" href="<?= $stylesheet ?>">
     <?php } ?>
 </head>
-<body>
+<body class="flex flex-column">
     <header>
         <?php require 'header.php'; ?>
     </header>
     
-    <main>
+    <main class="container-fluid">
         <?php echo $content; ?>
     </main>
     
