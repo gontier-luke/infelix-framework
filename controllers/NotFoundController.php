@@ -7,7 +7,7 @@ class NotFoundController extends ControllerCore
     public function __construct()
     {
         $this->template = '404.php';
-        $this->addCSS('style.css');
+        $this->addCSS('styles.css');
         $this->setTitle('Infelix Commentator - 404');
     }
 
