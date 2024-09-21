@@ -8,7 +8,10 @@
     <div class="header-menu container-fluid">
         <h1 class="title"><a href="/">Infelix Commentator</a></h1>
         <div class="pages">
-            <div class="pages-btn"><a href="/cv">CV</a></div>
-            <div class="pages-btn"><a href="/darkest-dungeon">Darkest Dungeon JDRPG</a></div>
+            <?php foreach ($menuLinks as $name => $link) { ?>
+                <div class="pages-btn">
+                    <a href="<?= $link ?>"><?= $name ?></a>
+                </div>
+            <?php } ?>
         </div>
     </div>

@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="<?= $stylesheet ?>">
     <?php } ?>
 </head>
-<body class="flex flex-column">
+<body class="d-grid">
     <header>
         <?php require 'header.php'; ?>
     </header>
@@ -15,7 +15,7 @@
         <?php echo $content; ?>
     </main>
     
-    <footer>
+    <footer class="footer container-fluid">
         <?php require 'footer.php'; ?>
     </footer>
 </body>

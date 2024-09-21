@@ -4,15 +4,16 @@ use PSpell\Config;
 
 class Router {
 
-    private ObjectCollection $routes;
+    /** @var ObjectCollection<Route> */
+    private static ObjectCollection $routes;
 
     public function __construct() {
-        $this->routes = new ObjectCollection(Route::class);
+        self::$routes = new ObjectCollection(Route::class);
         $this->getRoute();
     }
 
     public function addRoute(string $path, string $method, string $controller, string $name) {
-        $this->routes->add(new Route($path, $method, $controller, $name));
+        self::$routes->add(new Route($path, $method, $controller, $name));
     }
 
     public function handleRequest(string $path): void
@@ -23,7 +24,7 @@ class Router {
             $controller->maintenance();
             return;
         }
-        $filtered = $this->routes->filter(function($route) use ($path) {
+        $filtered = self::$routes->filter(function($route) use ($path) {
             return $route->getPath() === $path;
         });
         $controller = ControllerCore::getInstanceByName("NotFound");
@@ -34,7 +35,7 @@ class Router {
             }
             $route = $filtered->get(0);
             $controller = ControllerCore::getInstanceByName($route->getController());
-            if($controller::class === "NotFoundController") {
+            if(is_null($controller)) {
                 throw new RouteException("Controller not found: " . $route->getController());
             }
             $function = $route->getMethod();
@@ -48,7 +49,7 @@ class Router {
     }
 
     public function getAllRoutes() {
-        return $this->routes;
+        return self::$routes;
     }
 
     private function getRoute() {
@@ -68,4 +69,15 @@ class Router {
         return $controllerName;
     }
 
+    public static function generateUrl(string $name, array $params = []): string {
+        $routes = self::$routes->filter(function($route) use ($name) {
+            return $route->getAppName() === $name;
+        });
+        if($routes->isEmpty()) {
+            $routes = self::$routes->filter(function($route) {
+                return $route->getAppName() === 'notFound';
+            });
+        }
+        return $routes->get(0)->getPath(); 
+    }
 }

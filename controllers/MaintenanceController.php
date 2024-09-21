@@ -7,10 +7,11 @@ class MaintenanceController extends ControllerCore
     public function __construct()
     {
         $this->template = 'maitenance.php';
-        $this->addCSS('style.css');
+        $this->addCSS('styles.css');
         $this->setTitle('Infelix Commentator - Maintenance');
     }
 
+    #[Route('/maintenance', 'maintenance')]
     public function maintenance(): bool
     {
         $this->renderTemplate();

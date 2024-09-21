@@ -75,14 +75,7 @@ $container-max-width-xxl: 1200px;
   }
 }
 
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  margin-left: -.625rem;
-  margin-right: -.625rem;
-}
 
-// Flex
 
 .flex {
   display: flex;
@@ -169,7 +162,12 @@ $container-max-width-xxl: 1200px;
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin: -15px;
+  margin-left: -.625rem;
+  margin-right: -.625rem;
+}
+
+.d-grid {
+  display: grid;
 }
 
 .col {

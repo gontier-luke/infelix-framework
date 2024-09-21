@@ -11,6 +11,7 @@ class NotFoundController extends ControllerCore
         $this->setTitle('Infelix Commentator - 404');
     }
 
+    #[Route('/404', 'notFound')]
     public function notFound(): bool
     {
         $this->renderTemplate();

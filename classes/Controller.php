@@ -7,13 +7,10 @@ class ControllerCore{
     protected array $scripts = [];
     protected string $title = 'Infelix Commentator - base';
 
-    public static function getInstanceByName($name) : ControllerCore {
+    public static function getInstanceByName(string $name) : ?ControllerCore {
         $controllerPath = BASE_PATH . '/controllers/' . ucfirst($name) . 'Controller.php';
         if (!file_exists($controllerPath)) {
-
-            $controller = new NotFoundController();
-            $controller->setName('notFound');
-            return $controller;
+            return null;
         }
         $className =  ucfirst($name) .'Controller';
         require_once BASE_PATH . '/controllers/' . $className .'.php';
@@ -47,6 +44,17 @@ class ControllerCore{
         $this->title = $title;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    protected function setMenuLinks(): array
+    {
+        return [
+            'Curriculum Vitæ' => Router::generateUrl('app_cv'),
+            'Darkest Dungeon JDRPG' => Router::generateUrl('app_DarkestDungeon'),
+        ];
+    }
+
     protected function renderTemplate($variables = []): void
     {
         $this->addCSS('popupCaptchaStyle.css');
@@ -68,6 +76,8 @@ class ControllerCore{
         if ($this->name == null || $this->template == null) {
             $templateLink = $templatesRoot . '/index/index.php';
         }
+
+        $menuLinks = $this->setMenuLinks();
 
         $content = file_get_contents($templateLink);
 
