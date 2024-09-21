@@ -7,6 +7,7 @@ class SCSSCompiler
     private $variables = []; // Tableau pour stocker les variables SCSS
     private $mixins = [];    // Tableau pour stocker les mixins SCSS
     private $scssMaps = []; // Un tableau pour stocker les maps SCSS
+    private $rules = [];     // Tableau pour stocker les règles CSS
 
 
     public function __construct($scssFile, $cssFile)
@@ -92,13 +93,25 @@ class SCSSCompiler
             }
 
             // Ajouter les règles dans le bon contexte
-            $rule = $this->processRule($line);
+            $rule = explode(':',($line));
+            $selector = $this->processSelectors($indentStack);
             if ($currentMediaQuery) {
-                $mediaQueries[$currentMediaQuery][$this->processSelectors($indentStack)][] = $rule;
-            } else if (!empty($indentStack)) {
-                $css .= $this->generateCSS($this->processSelectors($indentStack), [$rule]);
+                if(!(isset($mediaQueries[$selector][trim($rule[0])]) && str_contains($mediaQueries[$selector][trim($rule[0])], '!important'))) {
+                    $mediaQueries[$currentMediaQuery][$selector][trim($rule[0])] = trim($rule[1]);
+                }
+                continue;
+            } 
+            if (!empty($indentStack)) {
+                if (!isset($this->rules[$selector])) {
+                    $this->rules[$selector] = [];
+                }
+                if(!(isset($this->rules[$selector][trim($rule[0])]) && str_contains($this->rules[$selector][trim($rule[0])], '!important'))) {
+                    $this->rules[$selector][trim($rule[0])] = trim($rule[1]);
+                }
             }
         }
+        // Générer les règles CSS
+        $css .= $this->generateRules($this->rules);
 
         // Générer les blocs de media queries
         $css .= $this->generateMediaQueries($mediaQueries);
@@ -106,29 +119,38 @@ class SCSSCompiler
         return $css;
     }
 
-    private function isMediaQuery($line)
+    private function generateRules(array $rules): string
+    {
+        $css = '';
+        foreach ($rules as $selector => $rules) {
+            $css .= $this->generateCSS($selector, $rules);
+        }
+        return $css;
+    }
+
+    private function isMediaQuery(string $line): bool
     {
         return preg_match('/^@media\s+(.*)\{$/', $line);
     }
 
-    private function extractMediaQuery($line)
+    private function extractMediaQuery(string $line): string
     {
         preg_match('/^@media\s+(.*)\{$/', $line, $matches);
         return trim($matches[1]);
     }
 
-    private function isSelector($line)
+    private function isSelector(string $line): bool
     {
         return preg_match('/^(.+)\s*\{$/', $line);
     }
 
-    private function extractSelector($line)
+    private function extractSelector(string $line): string
     {
         preg_match('/^(.+)\s*\{$/', $line, $matches);
         return trim($matches[1]);
     }
 
-    private function processRule($line)
+    private function processRule(string $line): string
     {
         // Remplacer les inclusions de mixins et les calculs
         $line = $this->processIncludes($line);
@@ -136,12 +158,19 @@ class SCSSCompiler
         return $line;
     }
 
-    private function generateCSS($selector, $rules)
+    private function generateCSS(string $selector, array $rules): string
     {
+        $rules = array_map(function ($value, $key) {
+            return $key . ': ' . $value;
+        }, $rules, array_keys($rules));
         return $selector . ' { ' . implode(' ', $rules) . ' } ';
     }
 
-    private function generateMediaQueries($mediaQueries)
+    /**
+     * Génère les blocs de media queries CSS à partir des règles et des sélecteurs
+     * @param array<string,array<string,array<string,string>>> $mediaQueries
+     */
+    private function generateMediaQueries(array $mediaQueries): string
     {
         $css = '';
         foreach ($mediaQueries as $mediaQuery => $selectors) {
@@ -154,50 +183,50 @@ class SCSSCompiler
         return $css;
     }
 
-    private function processMaps($scss)
-    {
-        // On cherche les maps SCSS du type $map: (key1: value1, key2: value2, ...);
-        preg_match_all('/\$(\w+):\s*\((.*?)\)\s*;/', $scss, $matches, PREG_SET_ORDER);
+    // private function processMaps($scss)
+    // {
+    //     // On cherche les maps SCSS du type $map: (key1: value1, key2: value2, ...);
+    //     preg_match_all('/\$(\w+):\s*\((.*?)\)\s*;/', $scss, $matches, PREG_SET_ORDER);
         
-        foreach ($matches as $match) {
-            $mapName = $match[1]; // Nom de la map
-            $mapValues = $match[2]; // Contenu de la map
+    //     foreach ($matches as $match) {
+    //         $mapName = $match[1]; // Nom de la map
+    //         $mapValues = $match[2]; // Contenu de la map
 
-            // On extrait les paires clé/valeur dans la map
-            $mapArray = [];
-            preg_match_all('/(\w+):\s*([^,]+)\s*,?/', $mapValues, $pairs, PREG_SET_ORDER);
-            foreach ($pairs as $pair) {
-                $key = trim($pair[1]);
-                $value = trim($pair[2]);
-                $mapArray[$key] = $value; // Stockage des paires clé/valeur
-            }
+    //         // On extrait les paires clé/valeur dans la map
+    //         $mapArray = [];
+    //         preg_match_all('/(\w+):\s*([^,]+)\s*,?/', $mapValues, $pairs, PREG_SET_ORDER);
+    //         foreach ($pairs as $pair) {
+    //             $key = trim($pair[1]);
+    //             $value = trim($pair[2]);
+    //             $mapArray[$key] = $value; // Stockage des paires clé/valeur
+    //         }
 
-            // Stocker la map entière dans $scssMaps
-            $this->scssMaps[$mapName] = $mapArray;
-        }
+    //         // Stocker la map entière dans $scssMaps
+    //         $this->scssMaps[$mapName] = $mapArray;
+    //     }
 
-        return $scss;
-    }
+    //     return $scss;
+    // }
 
-    private function getMapValue($map, $key)
-    {
-        if (preg_match('/\$(\w+)-\[(\w+)\]/', $map, $matches)) {
-            $mapName = $matches[1]; // Nom de la map
-            $mapKey = $matches[2];  // Clé de la map
+    // private function getMapValue($map, $key)
+    // {
+    //     if (preg_match('/\$(\w+)-\[(\w+)\]/', $map, $matches)) {
+    //         $mapName = $matches[1]; // Nom de la map
+    //         $mapKey = $matches[2];  // Clé de la map
 
-            // Vérifier si la map existe et contient la clé recherchée
-            if (isset($this->scssMaps[$mapName]) && isset($this->scssMaps[$mapName][$mapKey])) {
-                return $this->scssMaps[$mapName][$mapKey]; // Retourner la valeur trouvée
-            }
-        }
+    //         // Vérifier si la map existe et contient la clé recherchée
+    //         if (isset($this->scssMaps[$mapName]) && isset($this->scssMaps[$mapName][$mapKey])) {
+    //             return $this->scssMaps[$mapName][$mapKey]; // Retourner la valeur trouvée
+    //         }
+    //     }
 
-        // Si la variable ou la map n'existe pas, retourner une valeur vide ou par défaut
-        return '';
-    }
+    //     // Si la variable ou la map n'existe pas, retourner une valeur vide ou par défaut
+    //     return '';
+    // }
 
 
     // Modifie la fonction qui traite les media queries et variables
-    private function processVariables($scss)
+    private function processVariables(string $scss): string
     {
         $lines = explode("\n", $scss);
         foreach ($lines as &$line) {
@@ -221,7 +250,7 @@ class SCSSCompiler
         return implode("\n", $lines);
     }
 
-    private function processMixins($scss)
+    private function processMixins(string $scss): string
     {
         // Détection des mixins avec paramètres et stockage
         preg_match_all('/@mixin\s+(\w+)\s*\(([^)]*)\)\s*\{([^}]+)\}/', $scss, $matches, PREG_SET_ORDER);
@@ -243,7 +272,7 @@ class SCSSCompiler
         return $scss;
     }
 
-    private function processIncludes($line)
+    private function processIncludes(string $line): string
     {
         // Détection et substitution des inclusions de mixins
         if (preg_match('/@include\s+(\w+)\s*\(([^)]*)\);/', $line, $matches)) {
@@ -269,7 +298,7 @@ class SCSSCompiler
         return $line;
     }
 
-    private function processImports($scss)
+    private function processImports(string $scss): string
     {
         // Détection et traitement des instructions @import
         preg_match_all('/@import\s+["\']([^"\']+)["\'];/', $scss, $matches, PREG_SET_ORDER);
@@ -341,15 +370,19 @@ class SCSSCompiler
 
     private function processSelectors($indentStack)
     {
-        $currentSelector = implode(' ', $indentStack);
         // Remplacer les références parentales (&) par le sélecteur complet
-        if (strpos($currentSelector, '&') !== false) {
-            $lastSelector = array_pop($indentStack);
-            $currentSelector = implode(' ', $indentStack) . str_replace('&', '', $lastSelector);
+        $newSelector = '';
+        foreach ($indentStack as $selector) {
+            if(!empty($newSelector) && str_contains($selector, '&')) {
+                $newSelector = str_replace('&', $newSelector, $selector);
+                continue;
+            }
+
+            $newSelector .= ' ' . $selector;
         }
 
         // Assurer que le sélecteur est bien formaté
-        return trim($currentSelector);
+        return trim($newSelector);
     }
 
 }
@@ -359,9 +392,8 @@ if($_ENV['MODE'] == 'dev') {
     try {
         $compiler = new SCSSCompiler(BASE_PATH.'assets/css/base.scss', BASE_PATH.'build/css/styles.css');
         $compiler->compile();
-        echo "# Compilation terminée avec succès.";
     } catch (Exception $e) {
-        echo "Erreur : " . $e->getMessage();
+        dd( "Erreur : " . $e->getMessage());
     }
 }
 
