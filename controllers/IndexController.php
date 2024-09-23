@@ -8,7 +8,7 @@ class IndexController extends ControllerCore
     {
         $this->template = 'index.php';
         $this->addCSS('styles.css');
-        $this->setTitle('Infelix Commentator - Home');
+        $this->setTitle('Home');
     }
 
     #[Route('/', 'app_index')]

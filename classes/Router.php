@@ -65,7 +65,7 @@ class Router {
     }
 
     private function getControllerName(string $file) {
-        $controllerName = str_replace('Controller.php', '', $file);
+        $controllerName = lcfirst(str_replace('Controller.php', '', $file));
         return $controllerName;
     }
 

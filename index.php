@@ -38,6 +38,11 @@ foreach(glob('./repositories/*.php') as $fileName){
         require_once $fileName;
     }
 }
-
+if(Configuration::get('ssl') === '1') {
+    if($_SERVER['REQUEST_SCHEME'] === 'http') {
+        header('Location: https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
+        exit;
+    }
+}
 $router = new Router();
 $router->handleRequest($_GET['path'] ?? '/');

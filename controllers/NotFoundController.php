@@ -8,7 +8,7 @@ class NotFoundController extends ControllerCore
     {
         $this->template = '404.php';
         $this->addCSS('styles.css');
-        $this->setTitle('Infelix Commentator - 404');
+        $this->setTitle('404');
     }
 
     #[Route('/404', 'notFound')]

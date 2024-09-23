@@ -8,7 +8,7 @@ class MaintenanceController extends ControllerCore
     {
         $this->template = 'maitenance.php';
         $this->addCSS('styles.css');
-        $this->setTitle('Infelix Commentator - Maintenance');
+        $this->setTitle('Maintenance');
     }
 
     #[Route('/maintenance', 'maintenance')]

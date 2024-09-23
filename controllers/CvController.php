@@ -7,8 +7,13 @@ class CvController extends ControllerCore
     public function __construct()
     {
         $this->template = 'global.php';
-        $this->addCSS('style.css');
-        $this->setTitle('Infelix Commentator - Home');
+        $this->addCSS('styles.css');
+        $this->setTitle('CV');
+    }
+
+    protected function getSiteName(): string
+    {
+        return 'Luke Gontier';
     }
 
     #[Route('/cv', 'app_cv')]

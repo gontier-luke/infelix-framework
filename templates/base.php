@@ -2,6 +2,7 @@
 <html>
 <head>
     <title><?= $title ?></title>
+    <link rel="icon" type="image/png" href="<?= $logo ?>">
     <?php foreach ($stylesheets as $stylesheet){ ?>
         <link rel="stylesheet" type="text/css" href="<?= $stylesheet ?>">
     <?php } ?>

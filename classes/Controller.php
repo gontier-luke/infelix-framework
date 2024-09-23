@@ -41,9 +41,19 @@ class ControllerCore{
 
     protected function setTitle($title): void
     {
-        $this->title = $title;
+        $this->title = $this->getSiteName() . ' - ' . $title;
     }
 
+    protected function getSiteName(): string
+    {
+            return  Configuration::get('siteName');
+    }
+
+    protected function getFavicon(): string
+    {
+        return   $_ENV["PROJECT_ROOT"] . 'build/img/' . Configuration::get('logo');
+    }
+    
     /**
      * @return array<string, string>
      */
@@ -53,6 +63,11 @@ class ControllerCore{
             'Curriculum Vitæ' => Router::generateUrl('app_cv'),
             'Darkest Dungeon JDRPG' => Router::generateUrl('app_DarkestDungeon'),
         ];
+    }
+
+    protected function getTitle(): string
+    {
+        return $this->title;
     }
 
     protected function renderTemplate($variables = []): void
@@ -79,7 +94,13 @@ class ControllerCore{
 
         $menuLinks = $this->setMenuLinks();
 
+        $indexLink = Router::generateUrl('app_index');
+
+        $siteName = $this->getSiteName();
+
         $content = file_get_contents($templateLink);
+
+        $logo = $this->getFavicon();
 
         require_once $templatesRoot . 'base.php';
     }

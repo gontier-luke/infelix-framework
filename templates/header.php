@@ -6,7 +6,7 @@
     </script>
     <script src="<?= $siteRoot ?>assets/script/scriptCaptcha.js"></script>
     <div class="header-menu container-fluid">
-        <h1 class="title"><a href="/">Infelix Commentator</a></h1>
+        <h1 class="title"><a href="<?= $indexLink ?>"><?= $siteName ?></a></h1>
         <div class="pages">
             <?php foreach ($menuLinks as $name => $link) { ?>
                 <div class="pages-btn">
