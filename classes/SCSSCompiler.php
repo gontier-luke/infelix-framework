@@ -7,7 +7,7 @@ class SCSSCompiler
     private $variables = []; // Tableau pour stocker les variables SCSS
     private $mixins = [];    // Tableau pour stocker les mixins SCSS
     private $scssMaps = []; // Un tableau pour stocker les maps SCSS
-    private $rules = [];     // Tableau pour stocker les règles CSS
+    private $linesToPass = [0]; // Nombre de lignes à ignorer
 
 
     public function __construct($scssFile, $cssFile)
@@ -37,8 +37,11 @@ class SCSSCompiler
         }
     }
 
-    private function parseSCSS($scss)
+    private function parseSCSS(string $scss, int $forLevel = 0): string
     {
+        if (!key_exists($forLevel, $this->linesToPass)) {
+            $this->linesToPass[$forLevel] = 0;
+        }
         // Suppression des commentaires
         $scss = preg_replace('!/\*.*?\*/!s', '', $scss);
         $scss = preg_replace('/\n\s*\n/', "\n", $scss);
@@ -54,11 +57,21 @@ class SCSSCompiler
         $indentStack = [];       // Pile pour les sélecteurs imbriqués
         $mediaQueries = [];      // Pile pour les media queries
         $currentMediaQuery = ''; // Indique si on est dans une media query
+        $rules = [];             // Tableau pour stocker les règles CSS
 
-        foreach ($lines as $line) {
+        foreach ($lines as $pos => $line) {
             $line = trim($line);
 
             if (empty($line)) {
+                continue;
+            }
+
+            // Gérer les instructions @for
+            $nextLines = array_slice($lines, $pos + 1);
+            $css .= $this->forInRange($line, $nextLines, $rules, $forLevel);
+
+            if ($this->linesToPass[$forLevel] > 0) {
+                --$this->linesToPass[$forLevel];
                 continue;
             }
 
@@ -102,16 +115,16 @@ class SCSSCompiler
                 continue;
             } 
             if (!empty($indentStack)) {
-                if (!isset($this->rules[$selector])) {
-                    $this->rules[$selector] = [];
+                if (!isset($rules[$selector])) {
+                    $rules[$selector] = [];
                 }
-                if(!(isset($this->rules[$selector][trim($rule[0])]) && str_contains($this->rules[$selector][trim($rule[0])], '!important'))) {
-                    $this->rules[$selector][trim($rule[0])] = trim($rule[1]);
+                if(!(isset($rules[$selector][trim($rule[0])]) && str_contains($rules[$selector][trim($rule[0])], '!important'))) {
+                    $rules[$selector][trim($rule[0])] = trim($rule[1]);
                 }
             }
         }
         // Générer les règles CSS
-        $css .= $this->generateRules($this->rules);
+        $css .= $this->generateRules($rules);
 
         // Générer les blocs de media queries
         $css .= $this->generateMediaQueries($mediaQueries);
@@ -383,6 +396,72 @@ class SCSSCompiler
 
         // Assurer que le sélecteur est bien formaté
         return trim($newSelector);
+    }
+
+    private function forInRange(string $line, array &$lines, array &$rules, int $forLevel): void
+    {
+        $loopContent = '';
+        if (preg_match('/@for\s+\$(\w+)\s+from\s+(\d+)\s+through\s+(\d+)\s*\{/', $line, $matches)) {
+
+            $variableName = $matches[1];
+            $start = intval($matches[2]);
+            $end = intval($matches[3]);
+
+            // Collect the content inside the @for loop
+            $loopLines = [];
+            $braceCount = 1; // Start with 1 because we already matched the opening brace
+            $this->linesToPass[$forLevel] = 2;
+            while ($braceCount > 0 && $line !== false) {
+
+                $line = array_shift($lines);
+                if (strpos($line, '{') !== false) {
+                    $braceCount++;
+                }
+                if (strpos($line, '}') !== false) {
+                    $braceCount--;
+                }
+                if ($braceCount >= 0) {
+                    ++$this->linesToPass[$forLevel];
+                    $loopLines[] = $line;
+                }
+            }
+
+            // Generate the loop content
+            for ($i = $start; $i <= $end; $i++) {
+                foreach ($loopLines as $loopLine) {
+                    $loopContent .= str_replace(['#{$' . $variableName . '}','$' . $variableName], $i, $loopLine) . "\n";
+                }
+            }
+        }
+        // Insert the generated loop content back into the SCSS
+        $this->cssToArrayRules($loopContent, $rules);
+        
+        return;
+    }
+
+    private function cssToArrayRules(string $css, array &$rules, int $forLevel = 1) : array
+    {
+        if (empty($css)) {
+            return $rules;
+        }
+        foreach (explode('}', $this->parseSCSS($css, $forLevel)) as $block) {
+            if (empty(trim($block))) {
+                continue;
+            }
+            $blockStructured = explode('{', $block);
+            $selector = trim($blockStructured[0]);
+            $blockRules = explode(';', $blockStructured[1]);
+            $rules[$selector] = [];
+            foreach ($blockRules as $rule) {
+                if (empty(trim($rule))) {
+                    continue;
+                }
+                $rule = explode(':', $rule);
+                $rules[$selector][trim($rule[0])] = trim($rule[1]) . ';';
+            }
+        }
+        
+        return $rules;
     }
 
 }

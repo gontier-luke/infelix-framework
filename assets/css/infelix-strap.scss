@@ -171,5 +171,13 @@ $container-max-width-xxl: 1200px;
 }
 
 .col {
-  flex: 1;
+  padding-left: .625rem;
+  padding-right: .625rem;
+}
+
+@for $i from 1 through 12 {
+  .col-#{$i} {
+    flex: 0 0 calc(100% / 12 * $i);
+    max-width: calc(100% / 12 * $i);
+  }
 }
