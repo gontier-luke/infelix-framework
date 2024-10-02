@@ -8,7 +8,7 @@ class RandomController extends ControllerCore
     {
         $this->template = 'global.php';
         $this->addCSS('styles.css');
-        $this->setTitle('CV');
+        $this->setTitle('Wtf');
     }
 
     protected function getSiteName(): string
@@ -17,7 +17,7 @@ class RandomController extends ControllerCore
     }
 
     #[Route('/Lucky', 'app_lucky')]
-    public function cv(): bool
+    public function lucky(): bool
     {
         $this->redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
         return true;
