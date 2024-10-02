@@ -60,6 +60,9 @@ class SCSSCompiler
         $rules = [];             // Tableau pour stocker les règles CSS
 
         foreach ($lines as $pos => $line) {
+            if (str_contains($line, '// Typography yay')) {
+                dump($this->variables);
+            }
             $line = trim($line);
 
             if (empty($line)) {
@@ -128,7 +131,7 @@ class SCSSCompiler
 
         // Générer les blocs de media queries
         $css .= $this->generateMediaQueries($mediaQueries);
-
+        // dd($this->variables);
         return $css;
     }
 
@@ -254,7 +257,8 @@ class SCSSCompiler
             // Remplacer les variables dans le SCSS
             if(str_contains($line, '$')){
                 foreach ($this->variables as $variableName => $variableValue) {
-                    if (str_contains($line, $variableName)) {
+                    preg_match('/(\\'.$variableName.')[\w,\,,\;,\)]/',$line, $matches);
+                    if (count($matches) > 0) {
                         $line = str_replace($variableName, $variableValue, $line);
                     }
                 }
