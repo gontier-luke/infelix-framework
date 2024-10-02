@@ -65,6 +65,32 @@ class ControllerCore{
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    protected function getLuckyLink(): array
+    {
+        $luckyLink = [];
+
+        if (rand(0, 854) === 42) {
+            $luckyLink['Lucky link'] = Router::generateUrl('app_lucky');
+        }
+
+        return $luckyLink;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function setFooterLinks(): array
+    {
+        $links = [
+            'CV' => Router::generateUrl('app_cv'),
+            'Darkest Dungeon JDRPG' => Router::generateUrl('app_DarkestDungeon'),
+        ];
+        return array_merge($links, $this->getLuckyLink());
+    }
+
     protected function getTitle(): string
     {
         return $this->title;
@@ -93,6 +119,7 @@ class ControllerCore{
         }
 
         $menuLinks = $this->setMenuLinks();
+        $footerLinks = $this->setFooterLinks();
 
         $indexLink = Router::generateUrl('app_index');
 
@@ -103,5 +130,11 @@ class ControllerCore{
         $logo = $this->getFavicon();
 
         require_once $templatesRoot . 'base.php';
+    }
+
+    protected function redirect(string $url): void
+    {
+        header('Location: ' . $url);
+        exit();
     }
 }

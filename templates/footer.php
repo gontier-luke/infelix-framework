@@ -3,8 +3,12 @@
         <p>Crée et maintenu par : Infelix Commentator</p>
     </div>
     <div class="right">
-        <p><a href="/cv">CV</a></p>
-        <br>
-        <p><a href="/darkest-dungeon">Darkest Dungeon JDRPG</a></p>
+        <div class="footer-content__pages">
+            <?php foreach ($footerLinks as $name => $link) { ?>
+                <div class="pages-btn">
+                    <a href="<?= $link ?>"><?= $name ?></a>
+                </div>
+            <?php } ?>
+        </div>
     </div>
 </div>
