@@ -258,7 +258,7 @@ class SCSSCompiler
             if(str_contains($line, '$')){
                 foreach ($this->variables as $variableName => $variableValue) {
                     preg_match('/(\\'.$variableName.')[\w,\,,\;,\)]/',$line, $matches);
-                    if (count($matches) > 0) {
+                    if (count($matches) > 0 || str_contains($line, $variableName . ' ')) {
                         $line = str_replace($variableName, $variableValue, $line);
                     }
                 }
