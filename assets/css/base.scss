@@ -1,9 +1,8 @@
-$primary: #780382;  
-$secondary: #6c757d;
+$primary: #460000;  
+$secondary: #750B0B;
 $success: #28a745;
 
-@import url('https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap');
-
+@import "variables/typography";
 @import "infelix-strap";
 @import "func";
 @import "footer";
