@@ -87,4 +87,3 @@ function displayObject(object $object, ) {
     }
     echo "</ul>";
 }
-
