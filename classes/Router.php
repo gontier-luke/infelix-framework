@@ -12,8 +12,21 @@ class Router {
         $this->getRoute();
     }
 
+    private function getRouteParams(string $path) {
+        $params = [];
+        preg_match_all('/\{([^\}]*)\}/', $path, $matches);
+        
+        if(!empty($matches[1])) {
+            foreach($matches[1] as $match) {
+                $params[] = $match;
+            }
+        }
+
+        return $params;
+    }
+
     public function addRoute(string $path, string $method, string $controller, string $name) {
-        self::$routes->add(new Route($path, $method, $controller, $name));
+        self::$routes->add(new Route($path, $method, $controller, $name, $this->getRouteParams($path)));
     }
 
     public function handleRequest(string $path): void
@@ -24,15 +37,15 @@ class Router {
             $controller->maintenance();
             return;
         }
-        $filtered = self::$routes->filter(function($route) use ($path) {
-            return $route->getPath() === $path;
-        });
+        $params = [];
+        $filtered = $this->getRouteByPath($path, $params);
         $controller = ControllerCore::getInstanceByName("NotFound");
         $function = "notFound";
         if (!$filtered->isEmpty()) {
             if($filtered->count() > 1) {
                 throw new RouteException("Multiple routes found for path: $path");
             }
+            /**  @var Route $route */
             $route = $filtered->get(0);
             $controller = ControllerCore::getInstanceByName($route->getController());
             if(is_null($controller)) {
@@ -44,7 +57,7 @@ class Router {
         if(!method_exists($controller, $function)) {
             throw new RouteException('Controller ('.$controller::class.') function failed: '.$function);
         }
-        $controller->$function();
+        $controller->$function(...$params);
         return;
     }
 
@@ -79,5 +92,36 @@ class Router {
             });
         }
         return $routes->get(0)->getPath(); 
+    }
+
+    /**
+     * @param string $path
+     * @return ObjectCollection<Route>
+     */
+    private function getRouteByPath(string $path, array &$params) : ObjectCollection
+    {
+        $filtered = self::$routes->filter(function($route) use ($path) {
+            return $route->getPath() === $path;
+        });
+        if($filtered->isEmpty()) {
+            foreach(self::$routes->getAll() as $route) {
+                /** @var Route $route */
+                // dump($route->toArray());
+                $routeParams = $route->getParams();
+                if(!empty($routeParams)) {
+                    $regex = '/'.preg_quote($route->getPath(), '/').'/';
+                    foreach($routeParams as $arg) {
+                        $regex = str_replace('\{' . $arg . '\}', '(.*)', $regex);
+                    }
+                    $newParams = [];
+                    if(preg_match( $regex, $path, $newParams) == 1 && !empty($newParams)) {
+                        array_shift($newParams);
+                        $params = $newParams;
+                        $filtered->add($route);
+                    }
+                }
+            }
+        }
+        return $filtered;
     }
 }

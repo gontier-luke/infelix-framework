@@ -36,7 +36,11 @@ class ControllerCore{
 
     protected function addJS($script): void
     {
-        $this->scripts[] = $script;
+        if (str_contains($script, 'http')) {
+            $this->scripts[] = $script;
+            return;
+        }
+        $this->scripts[] = $_ENV["PROJECT_ROOT"] . 'script/'.$script.'.js';
     }
 
     protected function setTitle($title): void
@@ -100,6 +104,9 @@ class ControllerCore{
     {
         $this->addCSS('popupCaptchaStyle.css');
         $this->addCSS('base.css');
+        $this->addJS('https://code.jquery.com/jquery-3.7.1.min.js');
+        $this->addJS('copy');
+
         $siteRoot = $_ENV["PROJECT_ROOT"];
         $templatesRoot = BASE_PATH.'/templates/';
         $stylesheets = $this->stylesheets;
@@ -129,6 +136,8 @@ class ControllerCore{
 
         $logo = $this->getFavicon();
 
+        $socials = $this->getSocials();
+
         require_once $templatesRoot . 'base.php';
     }
 
@@ -137,4 +146,37 @@ class ControllerCore{
         header('Location: ' . $url);
         exit();
     }
+
+    protected function getSocials(): array
+    {
+        return [
+            'social_instagram' => [
+                'link' => Configuration::get('social_instagram'),
+                'icon' => 'image/picto-socials/instagram.svg',
+                'title' => 'Instagram',
+                'type' => 'url',
+            ],
+            'social_linkedin' => [
+                'link' => Configuration::get('social_linkedin'),
+                'icon' => 'image/picto-socials/linkedin.svg',
+                'title' => 'LinkedIn',
+                'type' => 'url',
+            ],
+            'social_discord' => [
+                'link' => Configuration::get('social_discord'),
+                'icon' => 'image/picto-socials/discord.svg',
+                'title' => 'Discord', 
+                'type' => 'copy',
+                'copy_message' => '<p>Mon identifiant Discord a été copié dans votre presse-papier.</p><p>Vous pouvez maintenant me contacter sur Discord après une demande d\'ajout d\'ami.</p><p> Si l\'identifiant n\'a pas été copié, vous pouvez le copier manuellement ici :</p>' . Configuration::get('social_discord'),
+            ],
+            'social_github' => [
+                'link' => Configuration::get('social_github'),
+                'icon' => 'image/picto-socials/github.svg',
+                'title' => 'GitHub', 
+                'type' => 'url',
+            ],
+            
+        ];
+    }
+
 }

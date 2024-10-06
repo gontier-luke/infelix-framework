@@ -100,8 +100,9 @@ class Parser {
                                                             throw new RouteException('\' is missing here : '. $filePath.':'.$currentLine);
                                                         }
                                                     }
-                                                    if (!empty($routes[$file][count($routes[$file])-1]['path'])) {
+                                                    if (!empty($routes[$file][count($routes[$file])-1]['path']) && !str_contains($param, '{')) {
                                                         $routes[$file][count($routes[$file])-1]['name'] = $param;
+                                                        $param = '';
                                                         break;
                                                     }
                                                     $routes[$file][count($routes[$file])]['path'] = $param;
@@ -164,7 +165,7 @@ class Parser {
                     }
                 }
             }
-        }      
+        }    
         return $routes;
     }
 
