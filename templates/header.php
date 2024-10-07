@@ -11,9 +11,11 @@
         <h1 class="title"><a href="<?= $indexLink ?>"><?= $siteName ?></a></h1>
         <div class="pages">
             <?php foreach ($menuLinks as $name => $link) { ?>
-                <div class="pages-btn">
-                    <a href="<?= $link ?>"><?= $name ?></a>
-                </div>
+                <a class="pages-btn" href="<?= $link ?>">
+                    <div>
+                        <?= $name ?>
+                    </div>
+            </a>
             <?php } ?>
         </div>
     </div>
