@@ -19,7 +19,8 @@ class CvController extends ControllerCore
     #[Route('/cv', 'app_cv')]
     public function cv(): bool
     {
-        $this->renderTemplate();
+        $formationSlider = (new Slider(FormationModel::class))->renderSlider();
+        $this->renderTemplate([ 'formationSlider' => $formationSlider ]);
         return true;
     }
 
