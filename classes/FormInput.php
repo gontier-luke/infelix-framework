@@ -1,8 +1,7 @@
 <?php 
 
-$basePath = explode('admin34572ed7dqk',dirname(__FILE__))[0];
 
-require_once $basePath .'/admin34572ed7dqk/enum/InputType.php';
+require_once BASE_PATH .'/enum/InputType.php';
 
 class FormInput{
 
