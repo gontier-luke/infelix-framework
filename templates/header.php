@@ -4,6 +4,7 @@
         const siteRoot = '<?= $siteRoot;?>';
         const $templatesRoot = '<?= $templatesRoot;?>';
     </script>
+    <script src="https://kit.fontawesome.com/58d7836aaa.js" crossorigin="anonymous"></script>
     <?php foreach ($scripts as $script) { ?>
         <script src="<?= $script ?>"></script>
     <?php } ?>

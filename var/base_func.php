@@ -87,3 +87,14 @@ function displayObject(object $object, ) {
     }
     echo "</ul>";
 }
+
+function render(string $template, array $data = []){
+    foreach($data as $key => $value){
+        $$key = $value;
+    }
+    ob_start();
+    require_once(BASE_PATH . 'templates/' . $template . '.php');
+    $contents = ob_get_contents();
+    ob_end_clean();
+    return $contents;
+}

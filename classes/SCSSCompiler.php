@@ -416,30 +416,30 @@ class SCSSCompiler
             $braceCount = 1; // Start with 1 because we already matched the opening brace
             $this->linesToPass[$forLevel] = 2;
             while ($braceCount > 0 && $line !== false) {
-
+                # prendre en compte les cas de boucle en une ligne
                 $line = array_shift($lines);
-                if (strpos($line, '{') !== false) {
-                    $braceCount++;
+                if (str_contains($line, '{')) {
+                    ++$braceCount;
                 }
-                if (strpos($line, '}') !== false) {
-                    $braceCount--;
+                if (str_contains($line, '}') && !str_contains($line, '#{$' . $variableName . '}')) {
+                    --$braceCount;
                 }
+
                 if ($braceCount >= 0) {
                     ++$this->linesToPass[$forLevel];
                     $loopLines[] = $line;
                 }
             }
-
             // Generate the loop content
             for ($i = $start; $i <= $end; $i++) {
                 foreach ($loopLines as $loopLine) {
                     $loopContent .= str_replace(['#{$' . $variableName . '}','$' . $variableName], $i, $loopLine) . "\n";
                 }
             }
+
         }
         // Insert the generated loop content back into the SCSS
         $this->cssToArrayRules($loopContent, $rules);
-        
         return;
     }
 
@@ -461,6 +461,9 @@ class SCSSCompiler
                     continue;
                 }
                 $rule = explode(':', $rule);
+                if(!isset($rule[1])) {
+                    $rule[1] = $rule[0];
+                }
                 $rules[$selector][trim($rule[0])] = trim($rule[1]) . ';';
             }
         }

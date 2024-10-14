@@ -13,7 +13,7 @@
     </header>
     
     <main class="container-fluid">
-        <?php echo $content; ?>
+        <?php  eval('?>' . $content); ?>
     </main>
     
     <footer class="footer container-fluid">
