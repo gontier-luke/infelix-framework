@@ -11,8 +11,8 @@ $container-max-width-xxl: 1200px;
 .container, .container-fluid, .container-xxl, .container-xl, .container-lg, .container-md, .container-sm {
   margin-left: auto;
   margin-right: auto;
-  padding-left: .625rem;
-  padding-right: .625rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
   width: 100%;
 }
 
@@ -88,56 +88,56 @@ $container-max-width-xxl: 1200px;
 
 @for $i from 0 through 5 {
   .p-#{$i} {
-    padding: $i * .625rem;
+    padding: calc($i * 0.625rem);
   }
   .pt-#{$i} {
-    padding-top: $i * .625rem;
+    padding-top: calc($i * 0.625rem);
   }
   .pr-#{$i} {
-    padding-right: $i * .625rem;
+    padding-right: calc($i * 0.625rem);
   }
   .pb-#{$i} {
-    padding-bottom: $i * .625rem;
+    padding-bottom: calc($i * 0.625rem);
   }
   .pl-#{$i} {
-    padding-left: $i * .625rem;
+    padding-left: calc($i * 0.625rem);
   }
   .px-#{$i} {
-    padding-left: $i * .625rem;
-    padding-right: $i * .625rem;
+    padding-left: calc($i * 0.625rem);
+    padding-right: calc($i * 0.625rem);
   }
   .py-#{$i} {
-    padding-top: $i * .625rem;
-    padding-bottom: $i * .625rem;
+    padding-top: calc($i * 0.625rem);
+    padding-bottom: calc($i * 0.625rem);
   }
   .m-#{$i} {
-    margin: $i * .625rem;
+    margin: calc($i * 0.625rem);
   }
 
   .mt-#{$i} {
-    margin-top: $i * .625rem;
+    margin-top: calc($i * 0.625rem);
   }
 
   .mr-#{$i} {
-    margin-right: $i * .625rem;
+    margin-right: calc($i * 0.625rem);
   }
 
   .mb-#{$i} {
-    margin-bottom: $i * .625rem;
+    margin-bottom: calc($i * 0.625rem);
   }
 
   .ml-#{$i} {
-    margin-left: $i * .625rem;
+    margin-left: calc($i * 0.625rem);
   }
 
   .mx-#{$i} {
-    margin-left: $i * .625rem;
-    margin-right: $i * .625rem;
+    margin-left: calc($i * 0.625rem);
+    margin-right: calc($i * 0.625rem);
   }
 
   .my-#{$i} {
-    margin-top: $i * .625rem;
-    margin-bottom: $i * .625rem;
+    margin-top: calc($i * 0.625rem);
+    margin-bottom: calc($i * 0.625rem);
   }
 
   /* .w-#{$i*20} {
@@ -145,6 +145,10 @@ $container-max-width-xxl: 1200px;
   }*/
 }
 
+
+.flex {
+  display: flex;
+}
 
 .flex {
   display: flex;
@@ -235,8 +239,8 @@ $container-max-width-xxl: 1200px;
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin-left: -.625rem;
-  margin-right: -.625rem;
+  margin-left: -0.625rem;
+  margin-right: -0.625rem;
 }
 
 .d-grid {
@@ -244,8 +248,8 @@ $container-max-width-xxl: 1200px;
 }
 
 .col {
-  padding-left: .625rem;
-  padding-right: .625rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
 }
 
 @for $i from 1 through 12 {
