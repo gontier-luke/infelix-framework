@@ -63,7 +63,11 @@ class FormInput{
                 $suffix = '</textarea>';
                 break;
             case InputTypeEnum::LABEL :
-                
+                break;
+            case InputTypeEnum::FILE :
+                $prefix = '<input type="file" ';
+                $attributes = ' accept="application/xml"';
+                $innerHtml = '>';
                 break;
             case InputTypeEnum::RADIO :
                 $for = isset($this->extra['id']) ? $this->extra['id'] : $this->name;
