@@ -106,6 +106,7 @@ class ControllerCore{
         $this->addCSS('base.css');
         $this->addJS('https://code.jquery.com/jquery-3.7.1.min.js');
         $this->addJS('copy');
+        $this->addJS('slider');
 
         $siteRoot = $_ENV["PROJECT_ROOT"];
         $templatesRoot = BASE_PATH.'/templates/';
