@@ -179,4 +179,11 @@ class ControllerCore{
         ];
     }
 
+    protected function generateHTMLLink(string $link, string $label, string $class = '', string $target = '', string $title = ''): string
+    {
+        $target = $target ? ' target="' . $target . '"' : '';
+        $class = $class ? ' class="' . $class . '"' : '';
+        return '<a href="' . $link . '"' . $target . $class . ' title="' . $title . '">' . $label . '</a>';
+    }
+
 }

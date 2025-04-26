@@ -6,3 +6,4 @@ var/cache
 .docker/
 verifCaptcha/
 DarkestDungeon/
+private/

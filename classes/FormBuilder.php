@@ -7,6 +7,15 @@ class FormBuilder{
     private string $action = '';
     private string $method = 'POST';
     private string $class = '';
+
+    public function __construct(string $action = '', string $method = 'POST', string $class = ''){
+        $this->inputs = [];
+        $this->action = $action;
+        $this->method = $method;
+        $this->class = $class;
+
+        return $this;
+    }
    
     public function add(string $name, string $label, InputTypeEnum $type, bool $required = false, string $defaultValue = '', array $extra = []):FormBuilder
     {
