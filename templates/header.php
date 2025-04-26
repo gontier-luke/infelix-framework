@@ -6,7 +6,7 @@
     </script>
     <script src="https://kit.fontawesome.com/58d7836aaa.js" crossorigin="anonymous"></script>
     <?php foreach ($scripts as $script) { ?>
-        <script src="<?= $script ?>"></script>
+        <script src="<?= $script ?>" defer></script>
     <?php } ?>
     <div class="header-menu container-fluid">
         <h1 class="title"><a href="<?= $indexLink ?>"><?= $siteName ?></a></h1>

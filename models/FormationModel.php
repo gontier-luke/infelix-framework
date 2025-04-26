@@ -10,9 +10,10 @@ class FormationModel extends ModelCore implements SliderableInterface
     protected string $description;
     protected string $image;
     protected string $link;
+    protected string $linkTarget;
     protected bool $active;
 
-    private const IMG_REPO = 'formations/';
+    private const IMG_REPO = IMAGE_LINK . 'formations/';
 
     public function __construct(?int $id = null)
     {
@@ -76,9 +77,15 @@ class FormationModel extends ModelCore implements SliderableInterface
         return $this->link;
     }
 
-    public function setLink(string $link): void
+    public function getTarget(): string
+    {
+        return $this->linkTarget;
+    }
+
+    public function setLink(string $link, string $target = '_blank'): void
     {
         $this->link = $link;
+        $this->linkTarget = $target;
     }
 
     public function isActive(): bool

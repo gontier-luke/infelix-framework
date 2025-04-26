@@ -1,10 +1,12 @@
 $primary: #460000;  
 $secondary: #750B0B;
 $success: #28a745;
+$white: #fefefe;
 
 @import "variables/typography";
 @import "infelix-strap";
 @import "func";
+@import "slider";
 @import "footer";
 @import "index";
 

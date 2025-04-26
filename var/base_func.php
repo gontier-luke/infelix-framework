@@ -4,7 +4,8 @@ $explodedPath = explode('/',dirname(__FILE__));
 array_pop($explodedPath);
 $basePath = implode('/',$explodedPath) . '/';
 define('BASE_PATH', $basePath);
-define('ADMIN_PATH',$basePath.'/admin868XQ90jwb/');
+define('ADMIN_PATH',$basePath.'/admin96hfsf54dcd/');
+define('IMAGE_LINK','/image/');
 
 if (!file_exists(BASE_PATH . '/.env')) {
     throw new Exception("Le fichier .env n'existe pas.");
