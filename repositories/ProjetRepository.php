@@ -1,33 +1,40 @@
 <?php
 
-class Formation{
+namespace Repositories;
+
+use \PDO;
+use Exceptions\ProjetException;
+use Models\ProjetModel;
+use Collections\EntityCollection;
+
+class ProjetRepository{
 
     private static ?PDO $connection = null;
 
-    public static function get(string $name): FormationModel
+    public static function get(string $name): ProjetModel
     {
         if(is_null(self::$connection)) {
-            self::$connection = ModelCore::getConnection();
+            self::$connection = ProjetModel::connectBd();
         }
 
-        $query = "SELECT id_configuration FROM configuration WHERE name = '$name'";
+        $query = "SELECT id_projet FROM projet WHERE name = '$name'";
         $result = self::$connection->query($query);
         if(!$result) {
-            throw new FormationException("Error while fetching configuration : " . self::$connection->errorInfo()[2]);
+            throw new ProjetException("Error while fetching projet : " . self::$connection->errorInfo()[2]);
         }
         $config = $result->fetchObject();
         if(is_null($config)) {
-            throw new FormationException('Configuration "'. $name .'" not found');
+            throw new ProjetException('Projet "'. $name .'" not found');
         }
 
-        $formationModel = new FormationModel($config->id_configuration);
-        return $formationModel;
+        $projetModel = new ProjetModel($config->id_projet);
+        return $projetModel;
     }
 
     public static function getAll(): EntityCollection
     {
         if(is_null(self::$connection)) {
-            self::$connection = ModelCore::getConnection();
+            self::$connection = ProjetModel::connectBd();
         }
 
         $query = "SELECT id_formation FROM formation";
