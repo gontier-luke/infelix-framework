@@ -1,4 +1,5 @@
 <?php
+namespace Enum;
 
 enum InputTypeEnum: string{
     case TEXT = 'text';
@@ -14,5 +15,4 @@ enum InputTypeEnum: string{
     case NUMBER = 'number';
     case LABEL = 'label';
     case CHECKBOX = 'checkbox';
-    case FILE = 'file';
 }
