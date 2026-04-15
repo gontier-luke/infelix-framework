@@ -7,3 +7,4 @@ var/cache
 verifCaptcha/
 DarkestDungeon/
 private/
+node_modules/
