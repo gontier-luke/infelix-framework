@@ -1,6 +1,9 @@
 <?php
 
-class IndexController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+class IndexController extends ControllerOverride
 {
     protected string $name;
 
@@ -11,14 +14,14 @@ class IndexController extends ControllerCore
         $this->setTitle('Home');
     }
 
-    #[Route('/', 'app_index')]
+    # [Route('/', 'app_index')]
     public function index(): bool
     {
         $this->renderTemplate();
         return true;
     }
 
-    // #[Route('/accueil-{couleur}', 'app_blue_index')]
+    // # [Route('/accueil-{couleur}', 'app_blue_index')]
     // public function colored(string $couleur): bool
     // {
     //     $this->renderTemplate($this->user);

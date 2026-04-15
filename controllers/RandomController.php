@@ -1,6 +1,9 @@
 <?php
 
-class RandomController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+class RandomController extends ControllerOverride
 {
     protected string $name;
 

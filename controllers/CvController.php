@@ -1,6 +1,9 @@
 <?php
 
-class CvController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+class CvController extends ControllerOverride
 {
     protected string $name;
 
@@ -16,7 +19,7 @@ class CvController extends ControllerCore
         return 'Luke Gontier';
     }
 
-    #[Route('/cv', 'app_cv')]
+    # [Route('/cv', 'app_cv')]
     public function cv(): bool
     {
         $formationSlider = (new Slider(FormationModel::class))->renderSlider();

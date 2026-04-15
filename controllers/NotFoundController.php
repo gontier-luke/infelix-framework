@@ -1,6 +1,9 @@
 <?php
 
-class NotFoundController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+class NotFoundController extends ControllerOverride
 {
     protected string $name;
 

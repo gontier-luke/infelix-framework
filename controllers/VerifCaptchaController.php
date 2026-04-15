@@ -1,6 +1,10 @@
 <?php
 
-class VerifCaptchaController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+
+class VerifCaptchaController extends ControllerOverride
 {
     protected string $name;
 

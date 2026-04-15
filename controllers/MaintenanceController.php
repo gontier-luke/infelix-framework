@@ -1,6 +1,9 @@
 <?
 
-class MaintenanceController extends ControllerCore
+namespace Controllers;
+
+use Override\ControllerOverride;
+class MaintenanceController extends ControllerOverride
 {
     protected string $name;
 
