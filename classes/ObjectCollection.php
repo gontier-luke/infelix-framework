@@ -1,6 +1,8 @@
 <?php
 
-class ObjectCollection implements Countable
+namespace Classes\Collections;  
+
+class ObjectCollection implements \Countable
 {
     protected string $type;
 

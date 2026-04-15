@@ -1,5 +1,5 @@
 <?php
-
+namespace Classes;
 class Mail{
     public static function sendTest(string $to, string $subject, string $message): void
     {

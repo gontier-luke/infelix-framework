@@ -1,5 +1,7 @@
 <?php
 
+namespace Classes\Interfaces;
+
 interface SliderableInterface
 {
     public function getName(): string;

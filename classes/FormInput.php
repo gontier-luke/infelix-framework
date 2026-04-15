@@ -1,5 +1,7 @@
 <?php 
+namespace Classes;
 
+use Enum\InputTypeEnum;
 
 require_once BASE_PATH .'/enum/InputType.php';
 
@@ -63,11 +65,12 @@ class FormInput{
                 $suffix = '</textarea>';
                 break;
             case InputTypeEnum::LABEL :
+                
                 break;
-            case InputTypeEnum::FILE :
-                $prefix = '<input type="file" ';
-                $attributes = ' accept="application/xml"';
-                $innerHtml = '>';
+            case InputTypeEnum::SUBMIT :
+                $prefix = '<input type="'.$this->type->value.'" class="btn btn-primary w-100 rounded" ';
+                $this->defaultValue = $this->label;
+                $this->label = '';
                 break;
             case InputTypeEnum::RADIO :
                 $for = isset($this->extra['id']) ? $this->extra['id'] : $this->name;
@@ -97,7 +100,7 @@ class FormInput{
             return '<label class="admin-form_label"'. $attributes. '>'.$this->label.'</label>';
         }
         $value = isset($_POST[$this->name]) ? $_POST[$this->name] : $this->defaultValue;
-        $html = '<div class="admin-form_group '.$groupClass.'">'.$label . $prefix . 'name="'.$this->name.'"' . ' value="'.$value.'"' . $attributes . $innerHtml . $suffix.'</div>';
+        $html = '<div class="admin-form_group '.$groupClass.'">'.$label . $prefix . 'name="'.$this->name.'" id="' . $this->name . '" value="'.$value.'"' . $attributes . $innerHtml . $suffix.'</div>';
 
         return $html;
     }

@@ -1,486 +1,559 @@
 <?php
 
+namespace Classes;
+
 class SCSSCompiler
 {
-    private $scssFile;
-    private $cssFile;
-    private $variables = []; // Tableau pour stocker les variables SCSS
-    private $mixins = [];    // Tableau pour stocker les mixins SCSS
-    private $scssMaps = []; // Un tableau pour stocker les maps SCSS
-    private $linesToPass = [0]; // Nombre de lignes à ignorer
+    /** @var string $inputFile Chemin vers le fichier SCSS d'entrée */
+    private string $inputFile;
+    /** @var string $outputFile Chemin vers le fichier CSS de sortie */
+    private string $outputFile;
+    /** @var string $currentDirectoryStack Pile des répertoires courants pour la gestion des imports */
+    private string $currentDirectoryStack = '';
 
+    /** @var array<string, mixed|object> $variables Variables SCSS */
+    private array $variables = [];
 
-    public function __construct($scssFile, $cssFile)
+    /** @var string $parentSelector Sélecteur parent pour l'imbrication */
+    private string $parentSelector = '';
+
+    /**
+     * Constructeur
+     * 
+     * @param string $inputFile Chemin vers le fichier SCSS d'entrée
+     * @param string $outputFile Chemin vers le fichier CSS de sortie
+     * @throws \Exception Si le fichier d'entrée n'existe pas
+     */
+    public function __construct(string $inputFile, string $outputFile)
     {
-        $this->scssFile = $scssFile;
-        $this->cssFile = $cssFile;
-    }
-
-    public function compile()
-    {
-        // Lire le contenu du fichier SCSS
-        $scssContent = file_get_contents($this->scssFile);
-        if ($scssContent === false) {
-            throw new Exception("Impossible de lire le fichier SCSS.");
+        if (!file_exists($inputFile)) {
+            throw new \Exception("Input SCSS file does not exist: $inputFile");
         }
-
-        // Traiter les imports avant de parser le SCSS
-        $scssContent = $this->processImports($scssContent);
-
-        // Analyser le contenu SCSS
-        $cssContent = $this->parseSCSS($scssContent);
-
-        // Écrire le contenu CSS dans le fichier
-        $result = file_put_contents($this->cssFile, $cssContent);
-        if ($result === false) {
-            throw new Exception("Impossible d'écrire dans le fichier CSS.");
-        }
-    }
-
-    private function parseSCSS(string $scss, int $forLevel = 0): string
-    {
-        if (!key_exists($forLevel, $this->linesToPass)) {
-            $this->linesToPass[$forLevel] = 0;
-        }
-        // Suppression des commentaires
-        $scss = preg_replace('!/\*.*?\*/!s', '', $scss);
-        $scss = preg_replace('/\n\s*\n/', "\n", $scss);
-
-        // Extraction des variables et mixins
-        $scss = $this->processVariables($scss);
-        $scss = $this->processMixins($scss);
-
-        // Séparer le contenu en lignes
-        $lines = explode("\n", $scss);
-        $css = '';
-
-        $indentStack = [];       // Pile pour les sélecteurs imbriqués
-        $mediaQueries = [];      // Pile pour les media queries
-        $currentMediaQuery = ''; // Indique si on est dans une media query
-        $rules = [];             // Tableau pour stocker les règles CSS
-
-        foreach ($lines as $pos => $line) {
-            if (str_contains($line, '// Typography yay')) {
-                dump($this->variables);
-            }
-            $line = trim($line);
-
-            if (empty($line)) {
-                continue;
-            }
-
-            // Gérer les instructions @for
-            $nextLines = array_slice($lines, $pos + 1);
-            $css .= $this->forInRange($line, $nextLines, $rules, $forLevel);
-
-            if ($this->linesToPass[$forLevel] > 0) {
-                --$this->linesToPass[$forLevel];
-                continue;
-            }
-
-            // Gérer les fermetures de blocs (sélecteurs ou media queries)
-            if ($line === '}') {
-                if ($currentMediaQuery) {
-                    $currentMediaQuery = ''; // Fin de media query
-                } else {
-                    array_pop($indentStack); // Fin de sélecteur imbriqué
-                }
-                continue;
-            }
-
-            // Gérer l'ouverture d'un bloc @media
-            if ($this->isMediaQuery($line)) {
-                $currentMediaQuery = $this->extractMediaQuery($line);
-                if (!isset($mediaQueries[$currentMediaQuery])) {
-                    $mediaQueries[$currentMediaQuery] = [];
-                }
-                continue;
-            }
-
-            // Gérer l'ouverture d'un sélecteur
-            if ($this->isSelector($line)) {
-                $selector = $this->extractSelector($line);
-                array_push($indentStack, $selector);
-
-                if ($currentMediaQuery) {
-                    $mediaQueries[$currentMediaQuery][$this->processSelectors($indentStack)] = [];
-                }
-                continue;
-            }
-
-            // Ajouter les règles dans le bon contexte
-            $rule = explode(':',($line));
-            $selector = $this->processSelectors($indentStack);
-            if ($currentMediaQuery) {
-                if(!(isset($mediaQueries[$selector][trim($rule[0])]) && str_contains($mediaQueries[$selector][trim($rule[0])], '!important'))) {
-                    $mediaQueries[$currentMediaQuery][$selector][trim($rule[0])] = trim($rule[1]);
-                }
-                continue;
-            } 
-            if (!empty($indentStack)) {
-                if (!isset($rules[$selector])) {
-                    $rules[$selector] = [];
-                }
-                if(!(isset($rules[$selector][trim($rule[0])]) && str_contains($rules[$selector][trim($rule[0])], '!important'))) {
-                    $rules[$selector][trim($rule[0])] = trim($rule[1]);
-                }
-            }
-        }
-        // Générer les règles CSS
-        $css .= $this->generateRules($rules);
-
-        // Générer les blocs de media queries
-        $css .= $this->generateMediaQueries($mediaQueries);
-        // dd($this->variables);
-        return $css;
-    }
-
-    private function generateRules(array $rules): string
-    {
-        $css = '';
-        foreach ($rules as $selector => $rules) {
-            $css .= $this->generateCSS($selector, $rules);
-        }
-        return $css;
-    }
-
-    private function isMediaQuery(string $line): bool
-    {
-        return preg_match('/^@media\s+(.*)\{$/', $line);
-    }
-
-    private function extractMediaQuery(string $line): string
-    {
-        preg_match('/^@media\s+(.*)\{$/', $line, $matches);
-        return trim($matches[1]);
-    }
-
-    private function isSelector(string $line): bool
-    {
-        return preg_match('/^(.+)\s*\{$/', $line);
-    }
-
-    private function extractSelector(string $line): string
-    {
-        preg_match('/^(.+)\s*\{$/', $line, $matches);
-        return trim($matches[1]);
-    }
-
-    private function processRule(string $line): string
-    {
-        // Remplacer les inclusions de mixins et les calculs
-        $line = $this->processIncludes($line);
-        $line = $this->evaluateExpressions($line);
-        return $line;
-    }
-
-    private function generateCSS(string $selector, array $rules): string
-    {
-        $rules = array_map(function ($value, $key) {
-            return $key . ': ' . $value;
-        }, $rules, array_keys($rules));
-        return $selector . ' { ' . implode(' ', $rules) . ' } ';
+        $this->inputFile = $inputFile;
+        $this->outputFile = $outputFile;
+        $this->currentDirectoryStack = dirname(realpath($inputFile));
     }
 
     /**
-     * Génère les blocs de media queries CSS à partir des règles et des sélecteurs
-     * @param array<string,array<string,array<string,string>>> $mediaQueries
+     * Compile le SCSS du fichier d'entrée vers le fichier de sortie.
+     * Prend en charge :
+     * - @media blocks
+     * - @for $i de A à B { ... }
+     * - css selectors imbriqués
+     * - ${var} variables simples
+     * - @import
+     * - création de fonctions simples
+     * - mixins
+     * - @if ... @else
+     * - commentaires /* ... * /
+     * - commentaires // ...
+     * - opérations arithmétiques de base dans les valeurs
+     * - gestion des unités (%, px, em, rem, vw, vh, ch)
+     * - gestion des nombres flottants
+     * - variables globales et locales
+     * - variables par défaut (!default)
+     * - variable complexes (listes, maps)
+     * - & sélecteurs parent
+     * 
+     * @function compile(): string
+     * @return string Le CSS compilé
      */
-    private function generateMediaQueries(array $mediaQueries): string
+    public function compile(): string
     {
-        $css = '';
-        foreach ($mediaQueries as $mediaQuery => $selectors) {
-            $css .= '@media ' . $mediaQuery . ' { ';
-            foreach ($selectors as $selector => $rules) {
-                $css .= $this->generateCSS($selector, $rules);
-            }
-            $css .= ' } ';
-        }
-        return $css;
+        $scss = file_get_contents($this->inputFile);
+
+        // Normalize newlines
+        $scss = str_replace("\r\n", "\n", $scss);
+        $scss = $this->stripOuterWhitespace($scss);
+
+        // First, expand all at-rule blocks (@media, @supports, etc.) recursively.
+        // We do this with a brace-matching scanner to avoid brittle regex pitfalls.
+        $scss = $this->compileBlock($scss);
+        file_put_contents($this->outputFile, $scss);
+        return $scss;
     }
 
-    // private function processMaps($scss)
-    // {
-    //     // On cherche les maps SCSS du type $map: (key1: value1, key2: value2, ...);
-    //     preg_match_all('/\$(\w+):\s*\((.*?)\)\s*;/', $scss, $matches, PREG_SET_ORDER);
-        
-    //     foreach ($matches as $match) {
-    //         $mapName = $match[1]; // Nom de la map
-    //         $mapValues = $match[2]; // Contenu de la map
-
-    //         // On extrait les paires clé/valeur dans la map
-    //         $mapArray = [];
-    //         preg_match_all('/(\w+):\s*([^,]+)\s*,?/', $mapValues, $pairs, PREG_SET_ORDER);
-    //         foreach ($pairs as $pair) {
-    //             $key = trim($pair[1]);
-    //             $value = trim($pair[2]);
-    //             $mapArray[$key] = $value; // Stockage des paires clé/valeur
-    //         }
-
-    //         // Stocker la map entière dans $scssMaps
-    //         $this->scssMaps[$mapName] = $mapArray;
-    //     }
-
-    //     return $scss;
-    // }
-
-    // private function getMapValue($map, $key)
-    // {
-    //     if (preg_match('/\$(\w+)-\[(\w+)\]/', $map, $matches)) {
-    //         $mapName = $matches[1]; // Nom de la map
-    //         $mapKey = $matches[2];  // Clé de la map
-
-    //         // Vérifier si la map existe et contient la clé recherchée
-    //         if (isset($this->scssMaps[$mapName]) && isset($this->scssMaps[$mapName][$mapKey])) {
-    //             return $this->scssMaps[$mapName][$mapKey]; // Retourner la valeur trouvée
-    //         }
-    //     }
-
-    //     // Si la variable ou la map n'existe pas, retourner une valeur vide ou par défaut
-    //     return '';
-    // }
-
-
-    // Modifie la fonction qui traite les media queries et variables
-    private function processVariables(string $scss): string
+    /** Compile un bloc de SCSS, redirigeant vers les fonctions appropriées :
+     * - @import
+     * - @for ... de ... à/jusqu'à ...
+     * - mixins
+     * - @if ... @else
+     * - gestion des variables simples #{$var} et $var
+     * - gestion des unités (%, px, em, rem, vw, vh, ch)
+     * - gestion des nombres flottants
+     * - variables globales et locales
+     * - variable complexes (listes, maps)
+     * - imbrication de sélecteurs
+     * - règles css simple
+     * - commentaires /* ... * /
+     * - commentaires // ...
+     * - & sélecteurs parent : l'objectif est de remplacer '&' par le sélecteur parent courant et de le sortir de l'imbrication une fois le traitement du parent terminé
+     * 
+     * @param string $src Le code SCSS à compiler
+     * @return string Le code CSS compilé
+     */
+    private function compileBlock(string $src): string
     {
-        $lines = explode("\n", $scss);
-        foreach ($lines as &$line) {
+        $out = '';
+        $pos = 0;
+        $len = strlen($src);
+        while ($pos < $len) {
+            dump('Position actuelle : '. $pos . ' / ' . substr($src, $pos, 30));
 
-            if (preg_match('/^\s*(\$[\w;\-]+)\s*:\s*(.+);$/', trim($line), $matches)) {
-                $variableName = $matches[1];
-                $variableValue = $matches[2];
-                $this->variables[$variableName] = $this->evaluateExpressions($variableValue);
-                continue;
-            }
-
-            // Remplacer les variables dans le SCSS
-            if(str_contains($line, '$')){
-                foreach ($this->variables as $variableName => $variableValue) {
-                    preg_match('/(\\'.$variableName.')[\w,\,,\;,\)]/',$line, $matches);
-                    if (count($matches) > 0 || str_contains($line, $variableName . ' ')) {
-                        $line = str_replace($variableName, $variableValue, $line);
+            switch(true) {
+                case (in_array($src[$pos], ["\t", "\n", ";", " ", "\r", ''])):
+                    // Espaces / caractères invisibles
+                    ++$pos;
+                    break;
+                case ($src[$pos] === '$'):
+                    // Définition de Variable simple ou complexe (list, map)
+                    if (preg_match('/^\$([a-zA-Z_-]*)\s*:\s*([^;]+);/', substr($src, $pos), $m)) {
+                        $varName = $m[1];
+                        $varValue = trim($m[2]);
+                        // Supporte !default
+                        $this->variables[$varName] = $varValue;
+                        $pos += strlen($m[0]);
+                        break;
+                    } 
+                    // Variable mal formée, on avance d'un caractère
+                    $out .= $src[$pos];
+                    ++$pos;
+                    break;
+                case (substr($src, $pos, 2) === '/*'):
+                    // Commentaire /* ... */
+                    $endComment = strpos($src, '*/', $pos + 2);
+                    if ($endComment === false) {
+                        // Pas de fin de commentaire, on prend le reste
+                        $out .= substr($src, $pos);
+                        $pos = $len;
+                        break;
                     }
+                    // On prend jusqu'à la fin du commentaire
+                    $pos = $endComment + 2;
+                    break;
+                case (substr($src, $pos, 2) === '//'):
+                    // Commentaire // ...
+                    $endComment = strpos($src, "\n", $pos + 2);
+                    if ($endComment === false) {
+                        // Pas de fin de commentaire, on prend le reste
+                        $out .= substr($src, $pos);
+                        $pos = $len;
+                        break;
+                    } 
+                    // On prend jusqu'à la fin du commentaire
+                    $pos = $endComment;
+                    break;
+                case ($src[$pos] === '@'):
+                    // Règle @...
+                    $control = $this->readUntilBraceOrSemicolon($src, pos: $pos);
+                    if ($control === null) {
+                        // Erreur de lecture, on sort
+                        $out .= substr($src, $pos);
+                        $pos = $len;
+                        break;
+                    }
+                    if ($control['type'] === 'semicolon') {
+                        // Règles simples @charset, @import, etc.
+                        $rule = trim($control['text']);
+                        // Règle @import : ne prend pas en charge les @import url(...)
+                        if (preg_match('/^@import\s+(url\()?["\']([^"\']*)["\']\s*\)?\s*;$/', $rule, $m)) {
+                            // Import avec url() - on l'ignore pour l'instant
+                            if(str_contains($rule, 'url(')) {
+                                dump('Import avec url() non supporté : ' . $rule);
+                                $out .= $rule . "\n";
+                                $pos += strlen(string: $control['text']);
+                                break;
+                            }
+                            dump('Compile @import ' . $m[2]);
+                            $importedContent = $this->handleImport($m[2]);
+                            $out .= $importedContent . "\n";
+                            $pos += strlen(string: $control['text']);
+                            break;
+                        }
+                        if(preg_match('/^@mixin\s+([a-zA-Z_]\w*)\s*(\(([^)]*)\))?\s*{/', $rule, $m)) {
+                            // Définition de mixin
+                            // Non implémenté pour l'instant
+                            $pos += $this->readBraceBlock($src,$this->readUntilBrace($src, $control['pos'])['pos'])['pos'];
+                            break;
+                        }
+                        $pos += strlen($control['text']);
+                        dump($rule);
+                        break;
+                    }
+                    if ($control['type'] === 'brace') {
+                        // Règles de bloc, e.g. @media, @for, @supports
+                        $header = trim($control['text']);
+                        $bracePos = $control['pos'];
+                        $block = $this->readBraceBlock($src, $bracePos);
+                        $inner = $block['inner'];
+                        $pos = $block['pos'];
+
+                        if (preg_match('/^@for\s+\$[a-zA-Z_]\w*\s+from\s+-?\d+(?:\.\d+)?\s+(to|through)\s+-?\d+(?:\.\d+)?/i', subject: $header)) {
+                            // Règle @for
+                            $expanded = $this->expandForLoop($header, $inner);
+                            $out .= $expanded . "\n";
+                            break;
+                        }
+                        
+                        if(preg_match('/^@media/', subject: $header)) {
+                            // Règle @media sans bloc, e.g. @media print;
+                            $out .= $header . "\n";
+                            dd('$out', $out);
+                            $pos += strlen($control['text']);
+                            break;
+                        }
+                        break;
+                    }
+
+                default:
+                    // Dans le cas d'une simple règle CSS ou d'un sélecteur imbriqué
+                    $nextControlPos = $this->findNextControl($src, $pos);
+                    if ($nextControlPos === null) {
+                        // Pas d'autre instruction, on prend le reste
+                        $text = substr($src, $pos);
+                        $processed = $this->processImbricationAndSelectors($text);
+                        $out .= $processed;
+                        $pos = $len;
+                        break;
+                    }
+                    // On prend jusqu'à la prochaine instruction @
+                    $text = substr($src, $pos, $nextControlPos - $pos);
+                    $processed = $this->processImbricationAndSelectors($text);
+                    dd('Texte à traiter : ' . $processed);
+                    $out .= $processed;
+                    $pos = $nextControlPos;
+                    break;
+            }
+        }
+        return str_replace("\n", '', $out);
+    }
+
+    /**
+     * Gère une instruction @import en lisant le fichier importé et en compilant son contenu.
+     * Retourne le contenu compilé à insérer à la place de l'instruction @import.
+     * 
+     * @param string $src Le chemin du fichier à importer
+     * @return string Le contenu compilé du fichier importé
+     */
+    private function handleImport(string $src): string
+    {
+        // Récupérer le répertoire courant et renseigner le chemin complet du fichier importé
+        $importPath = $this->currentDirectoryStack . '/' . trim($src);
+        if(substr($importPath, -5) !== '.scss') {
+            $importPath .= '.scss'; // Ajouter l'extension si absente
+        }
+        dump('Importing file: ' . $importPath);
+        $previousDir = $this->currentDirectoryStack;
+        $nextDir = dirname(realpath(path: $importPath));
+        if($nextDir !== $previousDir) {
+            // On change de répertoire, on empile l'ancien
+            $this->currentDirectoryStack = $nextDir;
+        }
+        if (!file_exists($importPath)) {
+            throw new \Exception("Imported SCSS file does not exist: $importPath");
+        }
+        $this->currentDirectoryStack = dirname(realpath($importPath));
+        $content = $this->compileBlock(file_get_contents($importPath));
+        if($nextDir !== $previousDir) {
+            $this->currentDirectoryStack = $previousDir; // On revient au répertoire précédent
+        }
+
+        return $content;
+    }
+
+    /**
+     * Trouve la position de la prochaine instruction de contrôle (commençant par '@') dans le texte à partir de la position donnée.
+     * Retourne null si aucune instruction n'est trouvée.
+     * 
+     * @param string $src Le texte source SCSS
+     * @param int $pos La position de départ pour la recherche
+     * @return int|null La position de la prochaine instruction ou null si non trouvée
+     */
+    private function findNextControl(string $src, int $pos): ?int
+    {
+        $at = strpos($src, '@', $pos);
+        if ($at === false) return null;
+        return $at;
+    }
+
+    /**
+     * Lit le texte à partir de la position donnée jusqu'à rencontrer une accolade ouvrante '{' ou un point-virgule ';'.
+     * Retourne un tableau associatif contenant :
+     * - 'type' : 'brace' si une accolade a été trouvée, 'semicolon' si un point-virgule a été trouvé, 'eof' si la fin du texte est atteinte.
+     * - 'text' : le texte lu depuis la position initiale jusqu'au caractère trouvé (exclu).
+     * - 'pos' : la position du caractère suivant celui trouvé (ou la fin du texte).
+     * 
+     * @param string $src Le texte source SCSS
+     * @param int $pos La position de départ pour la lecture
+     * @return array<string, string|int> Associatif avec les clés 'type', 'text', et 'pos'
+     */
+    private function readUntilBraceOrSemicolon(string $src, int $pos): array
+    {
+        // pos points to '@'
+        $i = $pos;
+        $len = strlen($src);
+        while ($i < $len) {
+            $ch = $src[$i];
+            if ($ch === ';') {
+                // simple at-rule @charset etc.
+                return ['type' => 'semicolon', 'text' => substr($src, $pos, $i - $pos + 1), 'pos' => $i + 1];
+            }
+            if ($ch === '{') {
+                // block at-rule
+                return ['type' => 'brace', 'text' => trim(substr($src, $pos, $i - $pos)), 'pos' => $i];
+            }
+            $i++;
+        }
+        // fallback: until end
+        return ['type' => 'eof', 'text' => substr($src, $pos), 'pos' => $len];
+    }
+
+    /**
+     * Lit le texte à partir de la position donnée jusqu'à rencontrer une accolade ouvrante '{'.
+     * Retourne un tableau associatif contenant :
+     * - 'text' : le texte lu depuis la position initiale jusqu'à l'accolade (exclue).
+     * - 'pos' : la position de l'accolade trouvée (ou la fin du texte).
+     * 
+     * @param string $src Le texte source SCSS
+     * @param int $pos La position de départ pour la lecture
+     * @return array<string, string|int> Associatif avec les clés 'text' et 'pos'
+     */
+    private function readUntilBrace(string $src, int $pos): array
+    {
+        $i = $pos;
+        $len = strlen($src);
+        while ($i < $len && $src[$i] !== '{') $i++;
+        return ['text' => substr($src, $pos, $i - $pos), 'pos' => $i];
+    }
+
+    private function readBraceBlock(string $src, int $bracePos): array
+    {
+        // expects $src[$bracePos] === '{'
+        $depth = 0;
+        $i = $bracePos;
+        $len = strlen($src);
+        for (; $i < $len; $i++) {
+            $ch = $src[$i];
+            if ($ch === '{') {
+                $depth++;
+            } elseif ($ch === '}') {
+                $depth--;
+                if ($depth === 0) {
+                    // block is from bracePos+1 to i-1
+                    $inner = substr($src, $bracePos + 1, $i - $bracePos - 1);
+                    return ['inner' => $inner, 'pos' => $i + 1];
                 }
             }
         }
+        // Unbalanced braces; return rest
+        $inner = substr($src, $bracePos + 1);
+        return ['inner' => $inner, 'pos' => $len];
+    }
+
+    /** 
+     * Développe une boucle @for $i from A to/through B { ... }
+     * en répétant le corps de la boucle avec $i remplacé par les valeurs successives.
+     * Supporte les modes "to" (exclusif) et "through" (inclusif).
+     * Gère les nombres négatifs et flottants.
+     */
+    private function expandForLoop(string $header, string $body): string
+    {
+        // Expect patterns: @for $i from 1 through 12  OR  @for $i from 1 to 12
+        if (!preg_match('/^@for\s+\$(?P<var>[a-zA-Z_]\w*)\s+from\s+(?P<start>-?\d+(?:\.\d+)?)\s+(?P<mode>to|through)\s+(?P<end>-?\d+(?:\.\d+)?)/', $header, $m)) {
+            // Invalid syntax, return body as is
+            return $body;
+        }
+
+        $varName = $m['var'];
+        $start = (float)$m['start'];
+        $mode = $m['mode'];
+        $end = (float)$m['end'];
+        $inclusive = ($mode === 'through');
+        $result = '';
+
+        $direction = '<';
+        if ($start > $end) {
+            $direction = '>';
+        }
+        $step = ($direction === '<') ? 1 : -1;
+        $current = $start;
+        $condition = function($cur, $end) use ($direction, $inclusive) {
+            if ($direction === '<') {
+                return $inclusive ? ($cur <= $end) : ($cur < $end);
+            }
+            return $inclusive ? ($cur >= $end) : ($cur > $end);
+        };
+
+        while ($condition($current, $end)) {
+            $result .= $this->compileBlock($this->replaceVar($body, $varName, $current)) . "\n";
+            $current += $step;
+        }
+        return $result;
+    }
+
+    private function replaceVar(string $text, string $name, $value): string
+    {
+        // Replace #{$name}
+        $text = preg_replace_callback('/#\{\s*\$' . preg_quote($name, '/') . '\s*\}/', function() use ($value) {
+            // Keep integers clean
+            if (is_numeric($value) && (int)$value == $value) return (string)intval($value);
+            return (string)$value;
+        }, $text);
+
+        // Replace $name in simple arithmetic like: $i * 8.333333%
+        // We'll try a basic arithmetic resolver for expressions involving the loop var.
+        $text = $this->resolveSimpleExpressions($text, $name, $value);
+
+        // Replace bare $name in values/selectors (safe fallback)
+        $text = preg_replace('/\$(' . preg_quote($name, '/') . ')\b/', (string)$value, $text);
+
+        return $text;
+    }
+
+    private function resolveSimpleExpressions(string $text, string $var, $value): string
+    {
+        // Very small evaluator for patterns like: ($i * 10px), ($i*8.3333%), $i * 2rem, 2 * $i
+        // It does not aim to be complete – just to cover common grid patterns.
+        $pattern = '/(?P<expr>(?:\$\b' . preg_quote($var, '/') . '\b|\d+(?:\.\d+)?)(?:\s*[\*\/\+\-]\s*(?:\$\b' . preg_quote($var, '/') . '\b|\d+(?:\.\d+)?))+\s*(?:%|px|rem|em|vw|vh|ch)?)/';
+        return preg_replace_callback($pattern, function($m) use ($var, $value) {
+            $expr = $m['expr'];
+
+            // Capture trailing unit if any
+            if (preg_match('/(%|px|rem|em|vw|vh|ch)\s*$/', $expr, $um)) {
+                $unit = $um[1];
+                $exprCore = substr($expr, 0, -strlen($um[0]));
+            } else {
+                $unit = '';
+                $exprCore = $expr;
+            }
+
+            // Replace $var with numeric value
+            $phpExpr = preg_replace('/\$\b' . preg_quote($var, '/') . '\b/', (string)$value, $exprCore);
+
+            // Evaluate safely: allow only numbers, spaces, and operators
+            if (!preg_match('/^[0-9\.\s\+\-\*\/]+$/', $phpExpr)) {
+                return $expr; // fallback
+            }
+            // Evaluate
+            $result = 0;
+            try {
+                // Use eval in a very constrained way
+                $result = eval('return ' . $phpExpr . ';');
+            } catch (\Throwable $e) {
+                return $expr;
+            }
+            // Normalize small floats
+            if (is_float($result)) {
+                if (abs($result - round($result)) < 1e-9) {
+                    $result = (string)round($result);
+                } else {
+                    $result = rtrim(rtrim(number_format($result, 6, '.', ''), '0'), '.');
+                }
+            }
+            return $result . $unit;
+        }, $text);
+    }
+
+    /**
+     * Interpole les variables simples de la forme ${name} dans le texte donné.
+     * Ne gère pas les variables complexes (listes, maps) ni les fonctions.
+     */
+    private function interpolateSimpleVariables(string $text, array $vars): string
+    {
+        return preg_replace_callback('/#\{\s*\$([a-zA-Z_]\w*)\s*\}/', function($m) use ($vars) {
+            $name = $m[1];
+            return isset($vars[$name]) ? $vars[$name] : '';
+        }, $text);
+    }
+
+    private function stripOuterWhitespace(string $s): string
+    {
+        // Keep inner indentation intact
+        $lines = explode("\n", $s);
         return implode("\n", $lines);
     }
 
-    private function processMixins(string $scss): string
+    /**
+     * Applique les traitements communs sur un texte normal (sélecteurs, règles CSS, etc.)
+     * ainsi que l'interpolation des variables simples et le caractère parent '&'.
+     * Retourne le texte traité.
+     * 
+     * @param string $text Le texte à traiter
+     * @return string Le texte traité
+     */
+    private function processImbricationAndSelectors(string $text): string
     {
-        // Détection des mixins avec paramètres et stockage
-        preg_match_all('/@mixin\s+(\w+)\s*\(([^)]*)\)\s*\{([^}]+)\}/', $scss, $matches, PREG_SET_ORDER);
-        foreach ($matches as $mixin) {
-            $mixinName = $mixin[1];
-            $params = array_map('trim', explode(',', $mixin[2])); // Extraction des paramètres
-            $content = trim($mixin[3]);
-
-            // Stockage du mixin avec ses paramètres et son contenu
-            $this->mixins[$mixinName] = [
-                'params' => $params,
-                'content' => $content
-            ];
-
-            // Supprimer le mixin du SCSS original après l'avoir stocké
-            $scss = str_replace($mixin[0], '', $scss);
-        }
-
-        return $scss;
-    }
-
-    private function processIncludes(string $line): string
-    {
-        // Détection et substitution des inclusions de mixins
-        if (preg_match('/@include\s+(\w+)\s*\(([^)]*)\);/', $line, $matches)) {
-            $mixinName = $matches[1];
-            $args = array_map('trim', explode(',', $matches[2])); // Extraction des arguments
-
-            if (isset($this->mixins[$mixinName])) {
-                $mixin = $this->mixins[$mixinName];
-                $mixinContent = $mixin['content'];
-
-                // Remplacement des paramètres par leurs arguments
-                foreach ($mixin['params'] as $index => $param) {
-                    $paramName = trim($param, '$ ');
-                    $argValue = $args[$index] ?? '';
-                    $mixinContent = str_replace('$' . $paramName, $argValue, $mixinContent);
-                }
-
-                // Remplacer l'include par le contenu du mixin avec les arguments
-                $line = str_replace($matches[0], $mixinContent, $line);
-            }
-        }
-
-        return $line;
-    }
-
-    private function processImports(string $scss): string
-    {
-        // Détection et traitement des instructions @import
-        preg_match_all('/@import\s+["\']([^"\']+)["\'];/', $scss, $matches, PREG_SET_ORDER);
-        foreach ($matches as $import) {
-            $importFile = trim($import[1]);
-
-            // Construire le chemin du fichier SCSS à importer
-            $importPath = dirname($this->scssFile) . '/' . $importFile . '.scss';
-            if (file_exists($importPath)) {
-                // Lire et intégrer le contenu du fichier importé
-                $importContent = file_get_contents($importPath);
-                if ($importContent !== false) {
-                    $scss = str_replace($import[0], $importContent, $scss);
-                } else {
-                    throw new Exception("Impossible de lire le fichier importé : $importPath.");
-                }
-            } else {
-                throw new Exception("Le fichier importé n'existe pas : $importPath.");
-            }
-        }
-
-        return $scss;
-    }
-
-    private function evaluateExpressions($value)
-    {
-        // Remplacement des fonctions simples comme darken() et lighten()
-        $value = preg_replace_callback('/(darken|lighten)\(([^,]+),\s*([^)]+)\)/', function ($matches) {
-            $function = $matches[1];
-            $color = trim($matches[2]);
-            $amount = floatval(trim($matches[3]));
-
-            // Pour simplification, ajustement direct de la luminosité pour darken/lighten
-            $adjustment = ($function === 'darken') ? -$amount : $amount;
-            return $this->adjustColorBrightness($color, $adjustment);
-        }, $value);
-
-        // Évaluer les opérations mathématiques simples
-        $value = preg_replace_callback('/\b(\d+)(\s*[\+\-\*\/]\s*)(\d+)\b/', function ($matches) {
-            $expression = $matches[0];
-            // Utiliser eval pour calculer les expressions mathématiques
-            return eval('return ' . $expression . ';');
-        }, $value);
-
-        return $value;
-    }
-
-    private function adjustColorBrightness($color, $amount)
-    {
-        // Fonction simple d'ajustement de la luminosité des couleurs (simulant darken/lighten)
-        if (preg_match('/^#([a-fA-F0-9]{6})$/', $color, $matches)) {
-            $hex = $matches[1];
-            $r = hexdec(substr($hex, 0, 2));
-            $g = hexdec(substr($hex, 2, 2));
-            $b = hexdec(substr($hex, 4, 2));
-
-            // Calcul de la nouvelle valeur des couleurs en ajustant la luminosité
-            $r = max(0, min(255, $r + ($amount * 2.55)));
-            $g = max(0, min(255, $g + ($amount * 2.55)));
-            $b = max(0, min(255, $b + ($amount * 2.55)));
-
-            // Retourner la couleur ajustée sous forme hexadécimale
-            return sprintf('#%02x%02x%02x', $r, $g, $b);
-        }
-
-        // Retourner la couleur inchangée si le format n'est pas pris en charge
-        return $color;
-    }
-
-    private function processSelectors($indentStack)
-    {
-        // Remplacer les références parentales (&) par le sélecteur complet
-        $newSelector = '';
-        foreach ($indentStack as $selector) {
-            if(!empty($newSelector) && str_contains($selector, '&')) {
-                $newSelector = str_replace('&', $newSelector, $selector);
-                continue;
-            }
-
-            $newSelector .= ' ' . $selector;
-        }
-
-        // Assurer que le sélecteur est bien formaté
-        return trim($newSelector);
-    }
-
-    private function forInRange(string $line, array &$lines, array &$rules, int $forLevel): void
-    {
-        $loopContent = '';
-        if (preg_match('/@for\s+\$(\w+)\s+from\s+(\d+)\s+through\s+(\d+)\s*\{/', $line, $matches)) {
-
-            $variableName = $matches[1];
-            $start = intval($matches[2]);
-            $end = intval($matches[3]);
-
-            // Collect the content inside the @for loop
-            $loopLines = [];
-            $braceCount = 1; // Start with 1 because we already matched the opening brace
-            $this->linesToPass[$forLevel] = 2;
-            while ($braceCount > 0 && $line !== false) {
-                # prendre en compte les cas de boucle en une ligne
-                $line = array_shift($lines);
-                if (str_contains($line, '{')) {
-                    ++$braceCount;
-                }
-                if (str_contains($line, '}') && !str_contains($line, '#{$' . $variableName . '}')) {
-                    --$braceCount;
-                }
-
-                if ($braceCount >= 0) {
-                    ++$this->linesToPass[$forLevel];
-                    $loopLines[] = $line;
-                }
-            }
-            // Generate the loop content
-            for ($i = $start; $i <= $end; $i++) {
-                foreach ($loopLines as $loopLine) {
-                    $loopContent .= str_replace(['#{$' . $variableName . '}','$' . $variableName], $i, $loopLine) . "\n";
-                }
-            }
-
-        }
-        // Insert the generated loop content back into the SCSS
-        $this->cssToArrayRules($loopContent, $rules);
-        return;
-    }
-
-    private function cssToArrayRules(string $css, array &$rules, int $forLevel = 1) : array
-    {
-        if (empty($css)) {
-            return $rules;
-        }
-        foreach (explode('}', $this->parseSCSS($css, $forLevel)) as $block) {
-            if (empty(trim($block))) {
-                continue;
-            }
-            $blockStructured = explode('{', $block);
-            $selector = trim($blockStructured[0]);
-            $blockRules = explode(';', $blockStructured[1]);
-            $rules[$selector] = [];
-            foreach ($blockRules as $rule) {
-                if (empty(trim($rule))) {
-                    continue;
-                }
-                $rule = explode(':', $rule);
-                if(!isset($rule[1])) {
-                    $rule[1] = $rule[0];
-                }
-                $rules[$selector][trim($rule[0])] = trim($rule[1]) . ';';
-            }
-        }
+        // Gérer l'imbrication des sélecteurs et le caractère parent '&'
         
-        return $rules;
-    }
+        // Sauvegarder le sélecteur présent
+        $originalParent = trim($this->parentSelector);
+        $selectorResearch = $this->readUntilBrace($text, 0);
 
+        if($selectorResearch === null) {
+            return $text; // Erreur de lecture, on retourne le texte tel quel
+        }
+
+        if(str_contains($selectorResearch['text'], '&')) {
+            if($this->parentSelector === ''){
+                throw new \Exception("Utilisation de '&' dans un contexte sans parent défini.");
+            }
+            $selectorResearch['text'] = str_replace('&', $this->parentSelector, $selectorResearch['text']);
+        }
+        $this->parentSelector = $originalParent . ' ' . trim($selectorResearch['text']);
+        $bodyBlock = $this->readBraceBlock($text, $selectorResearch['pos']);
+        $inner = $bodyBlock['inner'];
+
+        $compiledInner = $this->compileBlock($inner);
+
+        $this->parentSelector = $originalParent; // Restaurer le parent
+
+        $childProcessed = '';
+        $rules = '';
+        $isFirst = true;
+        foreach (explode("}", $compiledInner) as $internSelection){
+            if(trim($internSelection) === ''){
+                continue;
+            }
+            if(strpos($internSelection, ';' ) !== false && $isFirst){
+                // Règle CSS simple
+                foreach (explode(";", $internSelection) as $rule){
+                    if(trim($rule) === '' || trim($rule) === '{'){
+                        continue;
+                    }
+                    $rules .= $this->interpolateSimpleVariables(trim($rule) . ';', $this->variables) . "\n";
+                }
+            }
+            $innerSelectorResearch = $this->readUntilBrace($internSelection, 0);
+            if($innerSelectorResearch === null){
+                continue;
+            }
+            $childSelector = trim($innerSelectorResearch['text']);
+            if($childSelector === ''){
+                continue;
+            }
+            $childBodyBlock = $this->readBraceBlock($internSelection, $innerSelectorResearch['pos']);
+            $childInner = $childBodyBlock['inner'];
+            $childProcessed .= $this->parentSelector . ' ' . str_replace('&', $this->parentSelector, $childSelector) . " {\n" . $this->compileBlock($childInner) . "\n}\n";
+
+        }
+
+        if(trim($rules) !== ''){
+            $rules .= $rule;
+        }
+
+        return $this->parentSelector . " {\n" . $rules . "\n}\n" . $childProcessed;
+    }
 }
 
-if($_ENV['MODE'] == 'dev') {
-    // Exemple d'utilisation
-    try {
-        $compiler = new SCSSCompiler(BASE_PATH.'assets/css/base.scss', BASE_PATH.'build/css/styles.css');
-        $compiler->compile();
-    } catch (Exception $e) {
-        dd( "Erreur : " . $e->getMessage());
-    }
-}
+
+// if($_ENV['MODE'] == 'dev' && false) { // ne plus utiliser le compilateur pour l'instant
+//     // Exemple d'utilisation
+//     try {
+//         $compiler = new SCSSCompiler(BASE_PATH.'assets/css/base.scss', BASE_PATH.'build/css/styles.css');
+//         $compiler->compile();
+//     } catch (\Exception $e) {
+//         dd( "Erreur : " . $e->getMessage());
+//     }
+// }
 
 ?>

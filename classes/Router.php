@@ -1,17 +1,54 @@
 <?
 
-use PSpell\Config;
+namespace Classes;
+
+use Classes\Collections\ObjectCollection;
+use Repositories\Configuration;
+use Exceptions\RouteException;
+use Enum\LangEnum;
+use Services\AdminService;
 
 class Router {
 
     /** @var ObjectCollection<Route> */
     private static ObjectCollection $routes;
 
+    /** @var string */
+    public static string $adminPrefix;
+
+    /** @var bool */
+    private static bool $useLangSystem;
+
     public function __construct() {
         self::$routes = new ObjectCollection(Route::class);
+        self::$adminPrefix = 'admin';
+        self::$useLangSystem = Configuration::get('useLangInUrl') === '1';
         $this->getRoute();
+
     }
 
+    /**
+     * Vérifie si la langue est présente dans le chemin et la définit dans la session
+     * @param string $path
+     * @return bool
+     */
+    private function setLang(string &$path): bool {
+        if(!self::$useLangSystem) {
+            if(!isset($_SESSION['lang']) || !is_null($_SESSION['lang']) ) {
+                $_SESSION['lang'] = null;
+            }
+            return true;
+        }
+        preg_match('/(\/('.implode('|', LangEnum::getCodes()).')).*\//', $path, $matches );
+        if(!empty($matches)) {
+            // dd($matches);
+            $_SESSION['lang'] = $matches[2];
+            $path = str_replace($matches[1], '', $path);
+            return true;
+        }
+        $_SESSION['lang'] = Configuration::get('defaultLang');
+        return false;
+    }
     private function getRouteParams(string $path) {
         $params = [];
         preg_match_all('/\{([^\}]*)\}/', $path, $matches);
@@ -29,48 +66,60 @@ class Router {
         self::$routes->add(new Route($path, $method, $controller, $name, $this->getRouteParams($path)));
     }
 
+    /**
+     * Prend en charge une requête entrante
+     * 
+     * Règles :
+     * - Si la route est une route admin inexistante, la requête est redirigée vers la page de connexion
+     * - Si la route commence par le préfixe admin défini pour ce projet, la requête est traitée comme une requête admin
+     * - Si la route correspon à une route contetenant le préfixe 'admin', une erreur 404 est renvoyée pour éviter l'accès non autorisé
+     * - Si le site est en mode maintenance, la requête est redirigée vers la page de maintenance
+     * @param string $path
+     * @throws RouteException
+     * @return void
+     */
     public function handleRequest(string $path): void
     {
+        $adminUrlprefix = ADMIN_INDEX_PATH;
+        $adminLangPath = $path;
+        if(self::$useLangSystem) {
+            if(!isset($_SESSION['lang']) || is_null($_SESSION['lang']) ) {
+                $_SESSION['lang'] = Configuration::get('defaultLang');
+            }
+            $adminLangPath = '/' . $_SESSION['lang'] . $path;
+        }
+
+        $params = [];
+        $route = $this->getRouteByPath($path, $params);
+        if(!$route->isEmpty() && $route->get(0)->isAdminRoute) {
+            $path = '/404'; // Force not found
+        }
+        if(str_starts_with( $path, $adminUrlprefix)) {
+            $this->handleAdminRequest($adminLangPath);
+            return;
+        }
         if(Configuration::get('maintenance') === '1') {
-            /** @var MaintenanceController */
+            /** @var \Controllers\MaintenanceController $controller */
             $controller = ControllerCore::getInstanceByName("maintenance");
             $controller->maintenance();
             return;
         }
-        $params = [];
-        $filtered = $this->getRouteByPath($path, $params);
-        $controller = ControllerCore::getInstanceByName("NotFound");
-        $function = "notFound";
-        if (!$filtered->isEmpty()) {
-            if($filtered->count() > 1) {
-                throw new RouteException("Multiple routes found for path: $path");
-            }
-            /**  @var Route $route */
-            $route = $filtered->get(0);
-            $controller = ControllerCore::getInstanceByName($route->getController());
-            if(is_null($controller)) {
-                throw new RouteException("Controller not found: " . $route->getController());
-            }
-            $function = $route->getMethod();
-        }
+        
+        $this->getRequestResult($path);
 
-        if(!method_exists($controller, $function)) {
-            throw new RouteException('Controller ('.$controller::class.') function failed: '.$function);
-        }
-        $controller->$function(...$params);
         return;
     }
 
-    public function getAllRoutes() {
+    public function getAllRoutes(): ObjectCollection {
         return self::$routes;
     }
 
-    private function getRoute() {
+    private function getRoute(): void {
         foreach(Parser::parseRoutes() as $controller => $routes){
             $controllerName = $this->getControllerName($controller);
             foreach($routes as $route) {
                 if(!isset($route['path']) || !isset($route['method']) || !isset($route['name'])) {
-                    throw new RouteException('Route path, method or name is missing there : '. $controller);
+                    throw new RouteException(message: 'Route path, method or name is missing there : '. $controller);
                 }
                 $this->addRoute($route['path'], $route['method'], $controllerName, $route['name']);
             }
@@ -82,6 +131,16 @@ class Router {
         return $controllerName;
     }
 
+
+    /**
+     * Génère une URL à partir du nom de la route et des paramètres
+     * 
+     * Si des langues sont utilisées dans les URL, la langue actuelle de la session sera incluse dans l'URL générée.
+     * 
+     * @param string $name
+     * @param array $params
+     * @return string
+     */
     public static function generateUrl(string $name, array $params = []): string {
         $routes = self::$routes->filter(function($route) use ($name) {
             return $route->getAppName() === $name;
@@ -91,12 +150,27 @@ class Router {
                 return $route->getAppName() === 'notFound';
             });
         }
-        return $routes->get(0)->getPath(); 
+
+        $path = $routes->get(0)->getPath();
+        if($params != []) {
+            foreach($params as $key => $value) {
+                $path = str_replace('{' . $key . '}', $value, $path);
+            }
+        }
+
+        if(str_starts_with($path, '/' . self::$adminPrefix)) {
+            $path = str_replace('/' . self::$adminPrefix , ADMIN_INDEX_PATH, $path);
+        }
+
+        $realPath = str_replace('//', '/', $_ENV["PROJECT_ROOT"] . $_SESSION['lang'] . $path);
+
+        return $realPath; 
     }
 
     /**
      * @param string $path
      * @return ObjectCollection<Route>
+     * @throws RouteException
      */
     private function getRouteByPath(string $path, array &$params) : ObjectCollection
     {
@@ -116,12 +190,123 @@ class Router {
                     $newParams = [];
                     if(preg_match( $regex, $path, $newParams) == 1 && !empty($newParams)) {
                         array_shift($newParams);
-                        $params = $newParams;
+                        foreach($routeParams as $index => $argName) {
+                            if(!array_key_exists($index, $newParams)) {
+                                throw new RouteException("Route parameter missing: " . $argName);
+                            }
+                            $params[$argName] = $newParams[$index];
+                        }
                         $filtered->add($route);
                     }
                 }
             }
         }
         return $filtered;
+    }
+
+    public static function redirect(string $appName, array $params = []): never {
+        self::redirectUrl(self::generateUrl($appName, $params));
+        exit();
+    }
+
+    public static function redirectUrl(string $url): never {
+        header('Location: '. $url);
+        exit();
+    }
+
+
+    /**
+     * Prend en charge une requête admin
+     * @param string $path
+     * @throws RouteException
+     * @return bool Indique si la requête a été traitée avec succès ou renvoyée à la page de connexion
+     */
+    private function handleAdminRequest(string $path): bool {
+        if(ADMIN_INDEX_PATH === '/admin') {
+            throw new RouteException("Ne pas configurer ADMIN_INDEX_PATH à '/admin'.");
+        }
+        // Remove admin prefix from path
+        $prefixPos = strpos($path, ADMIN_INDEX_PATH);
+        if($prefixPos === false) {
+            throw new RouteException("Le chemin admin ne commence pas par le préfixe admin attendu.");
+        }
+        $path = substr($path, strlen(ADMIN_INDEX_PATH) + $prefixPos);
+        $prefixToAdd = '/admin';
+        if(!str_starts_with($path, '/')) {
+            $prefixToAdd .= '/';
+        }
+        self::$useLangSystem = false;
+        if(!AdminService::isAdminLogged($_SESSION) && $path !== '/login') {
+            self::redirectAdmin('app_admin_login');
+            return false;
+        }
+        $path = $prefixToAdd . $path;
+
+        $this->getRequestResult($path);
+        return true;
+    }
+
+    private function getRequestResult(string $path): void {
+        $params = [];
+        $redirectLang = !$this->setLang($path);
+        $filtered = $this->getRouteByPath($path, $params);
+
+        $controller = ControllerCore::getInstanceByName("NotFound");
+        $function = "notFound";
+        if (!$filtered->isEmpty()) {
+            if($filtered->count() > 1) {
+                throw new RouteException("Multiple routes found for path: $path");
+            }
+            /**  @var Route $route */
+            $route = $filtered->get(0);
+            if($redirectLang) {
+                self::redirect($route->getAppName(), $params);
+                return;
+            }
+            $controller = ControllerCore::getInstanceByName($route->getController());
+            if(is_null($controller)) {
+                throw new RouteException("Controller not found: " . $route->getController());
+            }
+            $function = $route->getMethod();
+        }
+
+        if(!method_exists($controller, $function)) {
+            throw new RouteException('Controller ('.$controller::class.') function failed: '.$function);
+        }
+        // dd($path, $params);
+        $controller->$function(...$params);
+        return;
+    }
+
+    public static function redirectAdmin(string $appName, array $params = []): never {
+        $url = self::generateAdminUrl($appName, $params);
+
+        self::redirectUrl($url);
+        throw new RouteException("Redirection vers une   page admin a échoué " . $url);
+    }
+
+    public static function generateAdminUrl(string $name, array $params = []): string {
+        $routes = self::$routes->filter(function($route) use ($name) {
+            return $route->getAppName() === $name;
+        });
+        if($routes->isEmpty()) {
+            $routes = self::$routes->filter(function($route) {
+                return $route->getAppName() === 'notFound';
+            });
+        }
+
+        $path = $routes->get(0)->getPath();
+        if($params != []) {
+            foreach($params as $key => $value) {
+                $path = str_replace('{' . $key . '}', $value, $path);
+            }
+        }
+
+        if(str_starts_with($path, '/' . self::$adminPrefix)) {
+            $path = str_replace('/' . self::$adminPrefix, ADMIN_INDEX_PATH, $path);
+        }
+
+        $realPath = str_replace('//', '/', $_ENV["PROJECT_ROOT"] . $path);
+        return $realPath; 
     }
 }

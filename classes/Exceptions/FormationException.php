@@ -1,6 +1,10 @@
 <?php
 
-class FormationException extends Exception
+namespace Exceptions;
+
+use Throwable;
+
+class FormationException extends \Exception
 {
     private string $prefix = "Formation Error : ";
 

@@ -1,6 +1,9 @@
 <?php
 
-class ConfigException extends Exception
+namespace Exceptions;
+
+use Throwable;
+class ConfigException extends \Exception
 {
     private string $prefix = "Config Error : ";
 

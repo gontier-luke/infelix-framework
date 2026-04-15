@@ -1,14 +1,19 @@
 <?php
 
+namespace Classes;
+
 class Route
 {
-    private string $path;
-    private string $method;
-    private string $controller;
-    private string $appName;
+    public string $path;
+    public string $method;
+    public string $controller;
+    public string $appName;
 
     /** @var array<string> */
     private array $params = [];
+
+    /** @var bool */
+    public bool $isAdminRoute = false;
 
     public function __construct(string $path, string $method, string $controller, string $appName, array $params = [])
     {
@@ -17,6 +22,7 @@ class Route
         $this->controller = $controller;
         $this->appName = $appName;
         $this->params = $params;
+        $this->isAdminRoute = str_starts_with($path, '/' . Router::$adminPrefix . '/');
     }
 
     public function getPath(): string

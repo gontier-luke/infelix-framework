@@ -3,10 +3,9 @@
 namespace Exceptions;
 
 use Throwable;
-
-class RouteException extends \Exception
+class AdminUserException extends \Exception
 {
-    private string $prefix = "Route Error : ";
+    private string $prefix = "Admin User Error : ";
 
     public function __construct($message, $code = 0, Throwable $previous = null)
     {

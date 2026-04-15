@@ -1,5 +1,9 @@
 <?php
 
+namespace Classes;
+
+use Exceptions\RouteException;
+
 class Parser {
     public const ROUTE_COMMENT = 'Route';
     public const INLINE_COMMENT = '#';
@@ -34,6 +38,7 @@ class Parser {
                     $param = '';
                     $unused = false;
                     $unusedChar = 0;
+                    $filePathsCpt = 0;
                     while (!empty($fileContent)) {
                         if ($char === "\n") {
                             $currentLine++;
@@ -67,8 +72,9 @@ class Parser {
                                                         $method .= $char;
                                                         break;
                                                 }
-                                                if ($getMethod === false) {
+                                                if (!$getMethod) {
                                                     $routes[$file][count($routes[$file])-1]['method'] = $method;
+                                                    $inlineComment = false;
                                                     $method = '';
                                                 }
                                                 break;
@@ -100,12 +106,13 @@ class Parser {
                                                             throw new RouteException('\' is missing here : '. $filePath.':'.$currentLine);
                                                         }
                                                     }
-                                                    if (!empty($routes[$file][count($routes[$file])-1]['path']) && !str_contains($param, '{')) {
+                                                    if (!empty($routes[$file][$filePathsCpt]) && !str_contains($param, '{')) {
+                                                        ++$filePathsCpt;
                                                         $routes[$file][count($routes[$file])-1]['name'] = $param;
                                                         $param = '';
                                                         break;
                                                     }
-                                                    $routes[$file][count($routes[$file])]['path'] = $param;
+                                                    $routes[$file][$filePathsCpt] = ['path' => $param];
                                                     $param = '';
                                                     break;
                                                 case ' ':
@@ -146,13 +153,13 @@ class Parser {
                                                 break;
                                             }
                                             break;
-                                        case ' ':
-                                            break;
                                         case self::ROUTE_COMMENT[0]:
                                             $routeFound = true;
                                             break;
                                         case "\n":
                                             $inlineComment = false;
+                                            break;
+                                        default:
                                             break;
                                     }
                                     break;

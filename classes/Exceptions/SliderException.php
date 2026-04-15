@@ -1,6 +1,10 @@
 <?php
 
-class SliderException extends Exception
+namespace Exceptions;
+
+use Throwable;
+
+class SliderException extends \Exception
 {
     private string $prefix = "Slider Error : ";
 

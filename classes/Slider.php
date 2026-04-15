@@ -1,5 +1,11 @@
 <?php
 
+namespace Classes;
+
+use Classes\Interfaces\SliderableInterface;
+use Classes\Collections\EntityCollection;
+use Exceptions\SliderException;
+
 class Slider{
     protected EntityCollection $slides;
     protected string $htmlClass = '';
