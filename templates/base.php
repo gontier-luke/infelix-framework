@@ -7,17 +7,19 @@
         <link rel="stylesheet" type="text/css" href="<?= $stylesheet ?>">
     <?php } ?>
 </head>
-<body class="d-grid">
+<body class="<?= $bodyClass ?>">
     <header>
-        <?php require 'header.php'; ?>
+        <?php 
+        require 'header.php';
+        ?>
     </header>
-    
-    <main class="container-fluid">
+    <main>
         <?php  eval('?>' . $content); ?>
     </main>
-    
     <footer class="footer container-fluid">
-        <?php require 'footer.php'; ?>
+        <?php
+         require 'footer.php';
+        ?>
     </footer>
 </body>
 </html>
