@@ -1,0 +1,57 @@
+#three-background{
+  height: 80%;
+  overflow: hidden;
+  display: flex;
+  z-index: -1;
+  transition: all 0.5s;
+}
+
+#three-background #chaise-container{
+  display: block;
+  text-align: right;
+  width: 100%;
+  height: 100%;
+  transition: all 0.5s;
+}
+
+#three-background #ushi-container{
+  display: none;
+  width: 0;
+  transition: all 0.5s;
+}
+    
+#three-background.active{
+  justify-content: center;
+  align-items: center;
+}
+
+#three-background.active #ushi-container{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+
+#three-background.active #chaise-container{
+  width: 50%;
+}
+
+#three-background.active .soundwaves{
+  height: 180px;
+  width: 80%;
+  position: relative;
+}
+
+#three-background.active .soundwaves .horizontal{
+  border: 1px solid #fff;
+  position: absolute;
+  transform: translateY(-50%);
+  top: 50%;
+  width: 100%;
+}
+
+#three-background.active .soundwaves .vertical-container{
+  width: 100%;
+  height: 100%;
+}
+
+  

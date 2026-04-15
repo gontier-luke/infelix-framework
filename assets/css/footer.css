@@ -1,0 +1,74 @@
+.footer{
+    @apply bg-black/10 justify-self-end container w-full min-w-full;
+
+    .footer-content{
+        @apply flex justify-between flex-col items-center py-4 mx-4;
+
+        .footer-content__pages{
+            @apply flex gap-4;
+            li{
+                @apply inline;
+
+                li::after{
+                    @apply inline-block w-1.5 h-1.5 rounded-full bg-(--font-color) align-middle ml-4;
+                }
+
+                li:last-child::after{
+                    @apply hidden;
+                }
+
+                a{
+                    @apply underline text-(--font-color);
+                }
+            }
+        }
+
+        .footer-content__socials{
+            @apply flex gap-4;
+
+            li{
+                @apply inline max-w-[2.9rem] cursor-pointer;
+
+                a{
+                    text-decoration: none;
+                    @apply text-(--font-color) text-2xl w-full;
+                }
+
+                img{
+                    @apply max-w-full h-auto;
+                }
+            }
+        }
+    }
+
+    .modal{
+        @apply hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-(--primary) to-(--secondary) shadow-lg z-1000 flex;
+
+        .modal-close{
+            @apply self-end cursor-pointer text-2xl;
+        }
+
+        .modal-content{
+            @apply p-4 rounded-lg flex flex-col gap-4;
+
+            .modal-title{
+                @apply text-2xl font-bold;
+            }
+
+            .modal-body{
+                @apply text-lg;
+            }
+
+            .modal-footer{
+                @apply flex justify-end gap-4;
+
+                button{
+                    @apply py-2 px-4 border-none rounded-lg cursor-pointer bg-(--font-color) text-(--font-primary);
+                }
+            }
+        }
+    }
+    .modal.active{
+        @apply flex;
+    }
+}

@@ -1,0 +1,65 @@
+*{
+    @apply box-border;
+}
+:root{
+    --primary: #460000;  
+    --secondary: #750B0B;
+    --success: #28a745;
+    --white: #fefefe;
+    --font-color: #fefefe;
+}
+
+html{
+    @apply w-full h-full p-0;
+
+    body{
+        @apply m-0 w-full h-full bg-gradient-to-br from-(--primary) to-(--secondary) text-(--font-color) font-(--font-primary) grid grid-cols-1 grid-rows-[100px_1fr_200px];
+
+        .header-menu{
+            justify-content: space-between;
+            display: flex;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.1);
+            color: var(--font-color);
+            font-size: 1.2em;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            text-decoration: none;
+            box-shadow: inset 0px 3px 80px -34px rgba(0, 0, 0, 0.2);
+            align-items: stretch;
+            @apply justify-between flex items-stretch text-center bg-black/10 text-(--font-color) text-lg sticky top-0 z-1000 shadow-inner;
+
+            a{
+                @apply text-(--font-color) no-underline cursor-pointer;
+            }
+            .title{
+                margin-top: 0.825rem;
+                margin-bottom: 0.825rem;
+                @apply my-3;
+            }
+            .pages{
+                @apply flex justify-center items-center flex-row w-fit items-stretch;
+
+                .pages-btn{
+                    @apply cursor-pointer flex-1 min-w-[14rem] border-l border-(--font-color) px-1 min-h-full flex justify-center items-center;
+
+                    .pages-btn:hover{
+                        @apply bg-black/40;
+                    }
+
+                    .pages-btn:first-child{
+                        @apply border-l-0 pl-0;
+                    }
+                    .pages-btn:last-child{
+                        @apply pr-0;
+                    }
+                }
+            }
+        }
+    }
+
+    body#maintenance{
+        @apply flex justify-center items-center flex-col;
+    }
+}

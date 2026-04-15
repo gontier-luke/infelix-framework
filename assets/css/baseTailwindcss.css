@@ -1,0 +1,14 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "./variables/typography.css" layer(theme);
+@import "./func.css" layer(components);
+@import "./slider.css" layer(components);
+@import "./footer.css" layer(base);
+@import "./index.css" layer(base);
+@import "./tree.css" layer(base);
+
+@source '../../templates/';
+@source '../../controllers/';
+@source '../../classes/Controller.php';

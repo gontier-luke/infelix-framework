@@ -1,0 +1,32 @@
+.slider{
+    @apply w-full text-white font-bold rounded-lg transition-all duration-500 overflow-x-hidden text-shadow-[2px_2px_2px_rgba(0_0_0_/_0.5)];
+
+    .slides{
+        @apply overflow-hidden;
+        .slides-container{
+            @apply flex flex-row transition-all duration-500;
+
+            .slide{
+                @apply min-w-full h-full flex w-full;
+
+                .slide-content{
+                    .slide-content__title{
+                        @apply text-5xl mb-4;
+                    }
+
+                    .slide-content__desc{
+                        @apply text-xl mb-4;
+                    }
+                }
+            }
+        }
+    }
+
+    .navigations{
+        @apply min-h-full justify-center items-center text-3xl;
+
+        .navigations:hover{
+            @apply bg-black/10 cursor-pointer;
+        }
+    }
+}
