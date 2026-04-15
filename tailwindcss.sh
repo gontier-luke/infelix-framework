@@ -1,0 +1,1 @@
+bunx @tailwindcss/cli -i assets/css/baseTailwindcss.css -o build/css/style.css
