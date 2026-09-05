@@ -3,9 +3,6 @@
 use classes\Router;
 use Repositories\Configuration;
 
-session_start();
-
-require_once 'var/base_func.php';
 
 foreach(glob('./enum/*.php') as $fileName){
 
