@@ -14,8 +14,11 @@ class Route
 
     /** @var bool */
     public bool $isAdminRoute = false;
+    
+    /** @var bool */
+    public bool $isActive = true;
 
-    public function __construct(string $path, string $method, string $controller, string $appName, array $params = [])
+    public function __construct(string $path, string $method, string $controller, string $appName, array $params = [], ?bool $isActive = true)
     {
         $this->path = $path;
         $this->method = $method;
@@ -23,6 +26,7 @@ class Route
         $this->appName = $appName;
         $this->params = $params;
         $this->isAdminRoute = str_starts_with($path, '/' . Router::$adminPrefix . '/');
+        $this->isActive = $isActive;
     }
 
     public function getPath(): string

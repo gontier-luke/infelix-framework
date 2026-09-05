@@ -14,6 +14,7 @@ class ObjectCollection implements \Countable
         $this->objects[] = $object;
     }
 
+    /** @return object[] */
     public function getAll(): array
     {
         return $this->objects;
@@ -21,7 +22,7 @@ class ObjectCollection implements \Countable
 
     public function get(int $index): object
     {
-        return $this->objects[$index];
+        return $this->objects[$index] ?? null;
     }
 
     public function remove(int $index): void
@@ -54,9 +55,10 @@ class ObjectCollection implements \Countable
         return empty($this->objects);
     }
 
-    public function sort(): void
+    public function sort(callable $comparator): self
     {
-        sort($this->objects);
+        usort($this->objects, $comparator);
+        return $this;
     }
 
     public function reverse(): void
@@ -64,9 +66,9 @@ class ObjectCollection implements \Countable
         $this->objects = array_reverse($this->objects);
     }
 
-    public function filter(callable $callback): ObjectCollection
+    public function filter(callable $callback): self
     {
-        $filtered = new ObjectCollection($this->type);
+        $filtered = new self($this->type);
         foreach ($this->objects as $object) {
             if ($callback($object)) {
                 $filtered->add($object);
@@ -75,11 +77,16 @@ class ObjectCollection implements \Countable
         return $filtered;
     }
 
-    public function map(callable $callback): ObjectCollection
+    /**
+     * Applique une fonction de rappel à chaque élément de la collection et retourne un nouvel Array contenant les résultats.
+     * @param callable $callback
+     * @return array
+     */
+    public function map(callable $callback, mixed ...$extraVar): array
     {
-        $mapped = new ObjectCollection($this->type);
+        $mapped = [];
         foreach ($this->objects as $object) {
-            $mapped->add($callback($object));
+            $mapped[] = $callback($object, ...$extraVar);
         }
         return $mapped;
     }
@@ -121,6 +128,21 @@ class ObjectCollection implements \Countable
     public function __destruct()
     {
         $this->objects = [];
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): void
+    {
+        $this->type = $type;
+    }
+
+    public function first(): ?object
+    {
+        return $this->get(0) ?? null;
     }
     
 } 
