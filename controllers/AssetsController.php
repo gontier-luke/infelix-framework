@@ -62,16 +62,15 @@ class AssetsController extends ControllerOverride
         return true;
     }
 
-    # [Route('/build/{path}', 'app_media_build')]
-    public function build(string $path): bool
+    # [Route('/ressources/{path}.{extension}', 'app_media_build')]
+    public function build(string $path, string $extension): bool
     {
-        $file = BASE_PATH . 'build/' . $path;
+        $file = BASE_PATH . 'build/' . $path . '.' . $extension;
         $this->setTitle('Build Asset : ' . $path);
         if(!file_exists($file)) {
             dd('File not found: ' . $file);
             return false;
         }
-        $extension = pathinfo($file, PATHINFO_EXTENSION);
         switch (strtolower($extension)) {
             case 'css':
                 header('Content-Type: text/css');
@@ -89,6 +88,9 @@ class AssetsController extends ControllerOverride
             case 'svg':
                 header('Content-Type: image/svg+xml');
                 break;
+            case 'pdf':
+                header('Content-Type: application/pdf');
+                break;
             default:
                 dd('Unsupported build asset extension: ' . $extension);
                 return false;
@@ -97,4 +99,43 @@ class AssetsController extends ControllerOverride
         return true;
     }
 
+    # [Route('/media/video/{path}.{extension}', 'app_media_video')]
+    public function video(string $path, string $extension): bool
+    {
+        $file = $path . '.' . $extension;
+        $this->setTitle('Vidéo : ' . $file);
+        $contentType = AssetsService::getVideoContentType($extension);
+        if($contentType === null) {
+            dd('Unsupported video extension: ' . $extension);
+            return false;
+        }
+        $content = AssetsService::getVideoContent($path, $extension);
+        if($content === null) {
+            return false;
+        }
+        header('Content-Type: ' . $contentType);
+        header("Accept-Ranges: bytes");
+        echo $content;
+        return true;
+    }
+
+    # [Route('/media/audio/{path}.{extension}', 'app_media_audio')]
+    public function audio(string $path, string $extension): bool
+    {
+        $file = $path . '.' . $extension;
+        $this->setTitle('Audio : ' . $file);
+        $contentType = AssetsService::getAudioContentType($extension);
+        if($contentType === null) {
+            dd('Unsupported audio extension: ' . $extension);
+            return false;
+        }
+        $content = AssetsService::getAudioContent($path, $extension);
+        if($content === null) {
+            return false;
+        }
+        header('Content-Type: ' . $contentType);
+        header("Accept-Ranges: bytes");
+        echo $content;
+        return true;
+    }
 }
