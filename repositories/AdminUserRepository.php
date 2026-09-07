@@ -2,13 +2,14 @@
 
 namespace Repositories;
 
+use Classes\ModelCore;
 use Models\AdminUserModel;
 use Exceptions\AdminUserException;
 use \PDO;
 
 class AdminUserRepository
 {
-    private static ?PDO $connexion = null;
+    private static ?PDO $connection = null;
 
     // Implémentez les méthodes nécessaires pour interagir avec les utilisateurs administrateurs dans la base de données
 
@@ -25,8 +26,8 @@ class AdminUserRepository
             // Aucun critère de connexion fourni
             return null;
         }
-        if(is_null(self::$connexion)) {
-            self::$connexion = AdminUserModel::connectBd();
+        if(is_null(self::$connection)) {
+            self::$connection = ModelCore::getConnection();
         }
 
         $critere = 'username';
@@ -39,13 +40,13 @@ class AdminUserRepository
         
         $query = "SELECT id_admin_user, password FROM admin_user WHERE $critere = '$valeur'";
         try {
-                $result = self::$connexion->query($query);
+                $result = self::$connection->query($query);
         } catch (\Exception $e) {
             // Gérer l'exception si nécessaire
-            throw new AdminUserException("Error while fetching configuration : " . self::$connexion->errorInfo()[2]);
+            throw new AdminUserException("Error while fetching configuration : " . self::$connection->errorInfo()[2]);
         }
         if(!$result) {
-            throw new AdminUserException("Error while fetching configuration : " . self::$connexion->errorInfo()[2]);
+            throw new AdminUserException("Error while fetching configuration : " . self::$connection->errorInfo()[2]);
         }
         $config = $result->fetchObject();
         if(is_null($config) || $config === false) {
@@ -84,5 +85,43 @@ class AdminUserRepository
         $adminUser->insert();
 
         return $adminUser;
+    }
+
+    public function getAllAdminUsers(): array
+    {
+        if(is_null(self::$connection)) {
+            self::$connection = ModelCore::getConnection();
+        }
+
+        $query = "SELECT id_admin_user FROM admin_user";
+        try {
+                $result = self::$connection->query($query);
+        } catch (\Exception $e) {
+            // Gérer l'exception si nécessaire
+            throw new AdminUserException("Error while fetching admin users : " . self::$connection->errorInfo()[2]);
+        }
+        if(!$result) {
+            throw new AdminUserException("Error while fetching admin users : " . self::$connection->errorInfo()[2]);
+        }
+        $adminUsers = [];
+        while($row = $result->fetchObject()) {
+            $adminUsers[] = new AdminUserModel($row->id_admin_user);
+        }
+
+        return $adminUsers;
+    }
+
+    public function getAdminUserById(int $id): AdminUserModel
+    {
+        return new AdminUserModel($id);
+    }
+
+    public function getAdminUserIdByUsernameOrEmail(?string $username, ?string $email): ?int
+    {
+        $adminUser = $this->findByUsername($username, $email);
+        if(is_null($adminUser)) {
+            return null;
+        }
+        return $adminUser->getId();
     }
 }

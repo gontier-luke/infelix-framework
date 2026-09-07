@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings>
+    <Module>
+        <Name>infelix_commentator</Name>
+        <Label>Infelix Commentator</Label>
+        <Version>Alpha 1.0.0</Version>
+        <Description>Module multifonctionnel pour le projet Infelix Commentator. CV, projets, etc...</Description>
+        <Author>Infelix Commentator</Author>
+    </Module>
+</Settings>

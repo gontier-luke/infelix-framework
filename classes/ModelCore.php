@@ -1,13 +1,10 @@
 <?php
 namespace Classes;
 
-use BackedEnum;
 use PDO;
 use Exceptions\ModelException;
 use Enum\ModelColumnEnum;
-use ModelCore as GlobalModelCore;
-
-abstract class ModelCore
+class ModelCore
 {
     /** @var string $table Nom de la table */
     public static string $table = "";
@@ -31,6 +28,13 @@ abstract class ModelCore
      */
     public static array $configuration = [];
 
+    public function __construct(?int $id = null)
+    {
+        if ($id !== null) {
+            $this->autoInstance($id);
+        }
+    }
+
     /**
      * A la construction du modèle vérifier que la table existe et correspond au modèle.
      * 
@@ -48,8 +52,9 @@ abstract class ModelCore
 
         /** @var ModelCore $className */
         $configuration = $className::$configuration;
+
         // Vérification et création de la table
-        $dbLink = self::connectBd();
+        $dbLink = self::getConnection();
         $query = "SHOW TABLES LIKE '" . $tableName . "'";
         $result = $dbLink->query($query);
         if ($result->rowCount() === 0) {
@@ -70,7 +75,7 @@ abstract class ModelCore
         return true;
     }
 
-    public static function connectBd(): ?PDO
+    protected function connectBd(): ?PDO
     {
         $dbLink = null;
         try {
@@ -78,10 +83,10 @@ abstract class ModelCore
             $dbLink->setAttribute(attribute: PDO::ATTR_ERRMODE, value: PDO::ERRMODE_EXCEPTION);
 
         } catch (\PDOException  $e) {
-            dd($e->getMessage());
             /** @var \Controllers\MaintenanceController */
             $controller = ControllerCore::getInstanceByName("maintenance");
             $controller->maintenance();
+            dd($e->getMessage());
             // Mail::send('lukegontier13@gmail.com', 'Erreur de connexion à la base de données', 'Erreur de connexion à la base de données : ' . $e->getMessage());
             // die;
         }
@@ -89,12 +94,9 @@ abstract class ModelCore
         return $dbLink;
     }
 
-    public function __construct(?int $id = null)
+    public static function getConnection(): PDO
     {
-        $this->setId($id);
-        if($id !== null) {
-            $this->autoInstance($id);
-        }
+        return (new self())->connectBd();
     }
 
     public function autoInstance(int $id): void
@@ -112,7 +114,7 @@ abstract class ModelCore
     public function hydrate(array $data): void
     {
         foreach ($data as $key => $value) {
-            $method = 'set' . ucfirst($key);
+            $method = 'set' . ucfirst(snakeToCamel($key));
             if ($key === 'id_' . $this::$table) {
                 $method = 'setId';
             }
@@ -124,7 +126,7 @@ abstract class ModelCore
 
     public static function createTable(?string $tableName = null, ?array $configuration = null): void
     {
-        $dbLink = self::connectBd();
+        $dbLink = self::getConnection();
 
         $query = "CREATE TABLE " . $tableName . " (";
         $columns = [];
@@ -136,9 +138,16 @@ abstract class ModelCore
             $columnDef = '`'.$column['column_name'] . "` " . $type->value;
             if (isset($column['length'])) {
                 $length = $column['length'];
-                if($type === ModelColumnEnum::ENUM && enum_exists($length)){
-                    $enumValues = implode("','", array_map(fn($case) => $case->value, $length::cases()));
+
+                if($type === ModelColumnEnum::ENUM){
+                    
+                    $enumValues = implode("','", explode(',', $column['length']));
                     $length = "'" . $enumValues . "'";
+                    if(str_ends_with($column['length'], 'Enum::class')) {
+                        $enumClass = 'Enum\\' . substr($column['length'], 0, -7);
+                        $enumValues = implode("','", array_map(fn($case) => $case->value, $enumClass::cases()));
+                        $length = "'" . $enumValues . "'";
+                    }
                 }
                 $columnDef .= "(" . $length . ")";
             }
@@ -171,7 +180,7 @@ abstract class ModelCore
         $dbLink->exec($query);
     }
 
-    public function insert(): void
+    public function insert(): bool
     {
         if( $this->getId() ) {
             throw new ModelException("L'enregistrement existe déjà en base de données.");
@@ -190,50 +199,47 @@ abstract class ModelCore
             $values[':' . $key] = $value;
         }
         $query .= implode(", ", $columns);
-        $query .= " ) VALUES (";
-        foreach ($values as $key => &$val) {
-            if($val instanceof \BackedEnum) {
-                $val = $val->value;
-            }
-            $query .= $key;
-            if($val !== end($values)) {
-                $query .= ", ";
-            }
-        }
-        $query .= " )";
+        $query .= " ) VALUES (" . implode(", ", array_keys($values)) . " )";
         $request = $dbLink->prepare($query);
         $request->execute($values);
         $this->setId($dbLink->lastInsertId());
+        return true;
     }
 
-    public function update(): void
+    public function update(): bool
     {
         $dbLink = $this->connectBd();
         $query = "UPDATE " . $this::$table . " SET ";
+        try {
 
-        $data = get_object_vars($this);
-        $colums = [];
-        $values = [];
-        foreach ($data as $key => $value) {
-            if ($key === 'id_' . $this::$table) {
-                continue;
+            $data = get_object_vars($this);
+            $colums = [];
+            $values = [];
+            foreach ($data as $key => $value) {
+                if ($key === 'id_' . $this::$table) {
+                    continue;
+                }
+                $colums[] = $key . " = :" . $key;
+                $values[':' . $key] = $value;
             }
-            $colums[] = $key . " = :" . $key;
-            $values[':' . $key] = $value;
-        }
-        $query .= implode(", ", array: $colums);
-        $query .= " WHERE id_" . $this::$table . " = " . $data['id_' . $this::$table];
+            $query .= implode(", ", array: $colums);
+            $query .= " WHERE id_" . $this::$table . " = " . $data['id_' . $this::$table];
+            
+            $request = $dbLink->prepare($query);
+            $request->execute($values);
+        } catch (\Throwable $e) {
+            throw new ModelException("Error while updating " . $this::$table . " : " . $e->getMessage() . "\n Query : " . $query);
         
-        $request = $dbLink->prepare($query);
-        $request->execute($values);
+        }
+        return true;
     }
 
-    public function delete(): void
+    public function delete(): bool
     {
         $dbLink = $this->connectBd();
         $data = get_object_vars($this);
         $query = "DELETE FROM " . $this::$table . " WHERE id_" . $this::$table . " = " . $data['id_' . $this::$table];
-        $dbLink->exec($query);
+        return $dbLink->exec($query) !== false;
     }
 
     public function getId(): ?int
@@ -242,5 +248,14 @@ abstract class ModelCore
         return $data['id_' . $this::$table];
     }
 
-    abstract public function setId(?int $id): void;
+    public function setId(int $id): void
+    {
+        $this->{'id_' . $this::$table} = $id;
+    }
+
+    public function toArray(): array
+    {
+        $data = get_object_vars($this);
+        return $data;
+    }
 }

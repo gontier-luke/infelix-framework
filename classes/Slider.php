@@ -9,12 +9,16 @@ use Exceptions\SliderException;
 class Slider{
     protected EntityCollection $slides;
     protected string $htmlClass = '';
+    protected string $classSlider;
+    protected string $template = 'slider';
+
+    protected const TEMPLATE_PATH = 'tools/slider/';
 
     public function __construct(string $class)
     {
-        if(in_array('SliderableInterface',class_implements($class))){
-            $repository = str_replace('Model','',$class);
-            $this->slides = $repository::getAll();
+        if(in_array('Classes\Interfaces\SliderableInterface',class_implements($class))){
+            $this->slides = new EntityCollection($class);
+            $this->classSlider = $class;
             return $this;
         }
         throw new SliderException('Class '.$class.' must implement SliderableInterface');
@@ -27,6 +31,9 @@ class Slider{
 
     public function add(SliderableInterface $slide): self
     {
+        if(get_class($slide) !== $this->classSlider){
+            throw new SliderException('Slide must be an instance of '.$this->classSlider);
+        }
         $this->slides->add($slide);
         return $this;
     }
@@ -43,15 +50,19 @@ class Slider{
         return $this;
     }
 
-    public function renderSlider(): string
+    public function renderSlider(?string $template = null): string
     {
-        foreach ($this->slides->getAll() as $slide) {
-            if(!$slide->isActive()){
-                $this->slides->remove($this->slides->indexOf($slide));
-            }
+        if(!is_null($template)){
+            $this->setTemplate($template);
         }
-        $html = render('tools/slider', ['slides' => $this->slides, 'htmlClass' => $this->htmlClass]); 
+        $html = render(self::TEMPLATE_PATH . $this->template, ['slides' => $this->slides, 'htmlClass' => $this->htmlClass]); 
         return $html;
+    }
+
+    public function setTemplate(string $template): self
+    {
+        $this->template = $template;
+        return $this;
     }
 
     public function __toString(): string

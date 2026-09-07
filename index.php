@@ -38,6 +38,7 @@ foreach(glob('./controllers/*.php') as $fileName){
     }
 }
 
+
 foreach(glob('./models/*.php') as $fileName){
 
     if (!str_contains($fileName,'index.php')) {
@@ -52,21 +53,12 @@ foreach(glob('./repositories/*.php') as $fileName){
     }
 }
 
-foreach(glob('./entities/*.php') as $fileName){
-
-    if (!str_contains($fileName,'index.php')) {
-        require_once $fileName;
-    }
-}
-
 foreach(glob('./services/*.php') as $fileName){
 
     if (!str_contains($fileName,'index.php')) {
         require_once $fileName;
     }
 }
-
-$router = new Router();
 
 $activeModules = getAllActiveModules();
 
@@ -77,10 +69,16 @@ foreach($activeModules as $module) {
     }
 }
 
+
 if(Configuration::get('ssl') === '1') {
     if($_SERVER['REQUEST_SCHEME'] === 'http') {
         header('Location: https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
         exit;
     }
 }
-$router->handleRequest($_GET['path'] ?? '/');
+$router = new Router();
+try {
+    $router->handleRequest($_GET['path'] ?? '/');
+} catch (Exception $e) {
+    dd($e->getMessage());
+}

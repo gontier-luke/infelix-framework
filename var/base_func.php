@@ -1,12 +1,13 @@
 <?php 
 
+
 use Classes\ModelCore;
 use Services\ModuleService;
 
 $explodedPath = explode('/',dirname(__FILE__));
 array_pop($explodedPath);
 define('INDEX_PATH', '/');
-define('ADMIN_INDEX_PATH', '/admin96hfsf54dcd');
+define('ADMIN_INDEX_PATH', 'admin0154654dqk');
 
 $basePath = implode('/',$explodedPath) . INDEX_PATH;
 define('BASE_PATH', $basePath);
@@ -161,4 +162,62 @@ function installModule(string $moduleName): bool {
     $moduleService = new ModuleService();
     $moduleService->installModule(settings: $settings);
     return true;
+}
+
+/**
+ * Crée une balise <a> HTML à partir des paramètres donnés
+ * @param string $id L'identifiant de la balise
+ * @param string $label Le texte affiché dans la balise
+ * @param string $url L'URL vers laquelle la balise pointe
+ * @param string $class La classe CSS de la balise
+ * @param array|null $extra Attributs HTML supplémentaires sous forme de tableau clé-valeur
+ * @return string
+ */
+function createHTMLABalise(string $id, string $label, string $url, string $class, ?array $extra = null): string {
+    $balise = '<a ';
+    $balise .= 'id="' . $id . '" ';
+    $balise .= 'href="' . $url . '" ';
+    $balise .= 'class="' . $class . '" ';
+    if($extra !== null) {
+        foreach($extra as $key => $value) {
+            $balise .= $key . '="' . $value . '" ';
+        }
+    }
+    $balise .= '>' . $label . '</a>';
+    return $balise;
+}
+
+function parseXmlFile(string $filePath): array {
+    if(!file_exists($filePath)) {
+        throw new Exception("Le fichier XML n'existe pas : $filePath");
+    }
+
+    $xml = simplexml_load_file($filePath);
+    if($xml === false) {
+        throw new Exception("Erreur lors du chargement du fichier XML : $filePath");
+    }
+
+    return json_decode(json_encode($xml), true);
+}
+
+function createHTMLSelectBalise(string $id, array $options, ?string $selectedValue = null, string $name = ''): string {
+    $select = '<select id="' . $id . '" name="' . ($name ?: $id) . '">';
+    foreach($options as $value => $label) {
+        $isSelected = ($value === $selectedValue) ? ' selected' : '';
+        $select .= '<option value="' . htmlspecialchars($value) . '"' . $isSelected . '>' . htmlspecialchars($label) . '</option>';
+    }
+    $select .= '</select>';
+    return $select;
+}
+
+function createHTMLChoiceBalise(string $id, array $options, ?string $selectedValue = null, string $name = ''): string {
+    $choice = '';
+    foreach($options as $value => $label) {
+        $isChecked = ($value === $selectedValue) ? ' checked' : '';
+        $choice .= '<label>';
+        $choice .= '<input type="radio" id="' . $id . '" name="' . ($name ?: $id) . '" value="' . htmlspecialchars($value) . '"' . $isChecked . '>';
+        $choice .= htmlspecialchars($label);
+        $choice .= '</label>';
+    }
+    return $choice;
 }

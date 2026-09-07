@@ -3,6 +3,7 @@ namespace Classes;
 
 use Repositories\Configuration;
 use Enum\LangEnum as Lang;
+use Services\AssetsService;
 
 class ControllerCore{
     protected string $name;
@@ -12,20 +13,39 @@ class ControllerCore{
     protected string $title = 'Infelix Commentator - base';
 
     public static function getInstanceByName(string $name) : ?ControllerCore {
-        $controllerPath = BASE_PATH . '/controllers/' . ucfirst($name) . 'Controller.php';
+        
+        $controllerPathes['base'] = BASE_PATH . '/controllers/';
+        foreach(getAllActiveModules() as $module) {
+            $moduleName = $module->getName();
+            $moduleControllersPath = BASE_PATH . 'modules/' . $moduleName . '/controllers/';
+            if(file_exists(BASE_PATH . 'modules/' . $moduleName . '/controllers/')) {
+                $controllerPathes[$moduleName] = $moduleControllersPath;
+            }
+
+        }
+        $controllerPath = $controllerPathes['base'];
         if (!file_exists($controllerPath)) {
             return null;
         }
-        $className =  ucfirst($name) .'Controller';
-        require_once BASE_PATH . '/controllers/' . $className .'.php';
-        $className = '\Controllers\\'.$className;
-        
-        /** @var ControllerCore */  
-        $controller = new $className();
-        $controller->setName($name);
-        $controller->addCSS('style');
-        $controller->addJS('https://code.jquery.com/jquery-3.7.1.min.js');
-        return $controller;
+
+        // On récupère le premier controller qui correspond au nom donné
+
+        foreach($controllerPathes as $moduleName => $path) {
+            $className =  ucfirst($name) .'Controller';
+            if(file_exists($path . $className . '.php')) {
+                require_once $path . $className .'.php';
+                $className = '\Controllers\\'.$className;
+                
+                /** @var ControllerCore */  
+                $controller = new $className();
+                $controller->setName($name);
+                $controller->addCSS('style');
+                $controller->addJS('https://code.jquery.com/jquery-3.7.1.min.js');
+                return $controller;
+            }
+        }
+
+        return null;
     }
 
     public function setName($name): void
@@ -35,6 +55,10 @@ class ControllerCore{
 
     protected function addCSS($stylesheet): void
     {
+        if (str_starts_with($stylesheet, 'http')) {
+            $this->stylesheets[] = $stylesheet;
+            return;
+        }
         $this->stylesheets[] =  Router::generateUrl('app_media_css', ['path' => $stylesheet]);
     }
 
@@ -44,7 +68,7 @@ class ControllerCore{
             $this->scripts[] = $script;
             return;
         }
-        $this->scripts[] = $_ENV["PROJECT_ROOT"] . 'script/'.$script.'.js';
+        $this->scripts[] = Router::generateUrl('app_media_script', ['path' => $script]);
     }
 
     protected function setTitle($title): void
@@ -80,8 +104,6 @@ class ControllerCore{
     protected function setMenuLinks(): array
     {
         return [
-            'Présentation' => Router::generateUrl(name: 'app_presentation'), // Présentation de HAM ainsi que de l'équipe
-            'Jeux & Histoires' => Router::generateUrl('app_jeux_histoires'), // Présentation des jeux et des histoires (projets)
         ];
     }
 
@@ -123,8 +145,11 @@ class ControllerCore{
         ];
     }
 
-    protected function trans(string $value, string $domain = 'base'): string
+    protected function trans(string $value, ?string $domain = null): string
     {
+        if ($domain === null) {
+            $domain = $this->name;
+        }
         return Lang::trans($value, $domain);
     }
 
@@ -189,5 +214,9 @@ class ControllerCore{
     protected function getBaseTemplate(): string
     {
         return 'base.php';
+    }
+
+    public function __construct()
+    {
     }
 }

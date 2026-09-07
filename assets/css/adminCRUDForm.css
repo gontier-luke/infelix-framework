@@ -1,0 +1,43 @@
+body.admin[class*="CRUD"]{
+    @apply font-['Arial',sans-serif] grid grid-cols-[10%_90%] grid-rows-[1fr] ;
+
+    .crud-card{
+        @apply grid grid-cols-[1fr] gap-4 p-4;
+
+        .preview-image{
+            @apply overflow-hidden rounded-2xl;
+            
+            .admin-form_label{
+                .image_preview_label{
+                    @apply flex flex-row gap-2 items-start justify-start; 
+                }
+                .image-preview-container{
+                    @apply relative rounded-2xl overflow-hidden p-3 cursor-pointer max-w-full;
+
+                    .image-preview-wrapper{
+                        @apply top-0 left-0 w-full h-full absolute border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden flex items-center justify-center z-10;
+                    }
+                    .img-preview{
+                        @apply top-0 left-0 w-full h-auto max-w-full;
+                    }
+                }
+            }
+        } 
+        .crud-form{
+            @apply flex flex-col gap-4;
+
+            .admin-form_group {
+                @apply grid grid-cols-[20%_50%] gap-2;
+
+                .admin-form_input{
+                    @apply border border-gray-300 rounded-md p-2 text-2xl;
+                }
+
+                .story-description{
+                    @apply h-80 max-w-full max-h-80;
+                }
+            }
+        }
+    }
+
+}

@@ -1,32 +1,17 @@
 .slider{
-    @apply w-full text-white font-bold rounded-lg transition-all duration-500 overflow-x-hidden text-shadow-[2px_2px_2px_rgba(0_0_0_/_0.5)];
+    @apply relative;
 
-    .slides{
-        @apply overflow-hidden;
-        .slides-container{
-            @apply flex flex-row transition-all duration-500;
-
-            .slide{
-                @apply min-w-full h-full flex w-full;
-
-                .slide-content{
-                    .slide-content__title{
-                        @apply text-5xl mb-4;
-                    }
-
-                    .slide-content__desc{
-                        @apply text-xl mb-4;
-                    }
-                }
-            }
+    .slide-container{
+        @apply flex flex-row;
+        .slide{
+            @apply px-10 flex flex-row items-center justify-center w-full h-full;
         }
     }
+    .controls{
+        @apply absolute top-1/2 left-0 w-full flex justify-between items-center transform -translate-y-1/2 px-2;
 
-    .navigations{
-        @apply min-h-full justify-center items-center text-3xl;
-
-        .navigations:hover{
-            @apply bg-black/10 cursor-pointer;
+        .prev, .next{
+            @apply bg-gray-800/80 text-white text-2xl font-bold p-2 rounded-full cursor-pointer w-[50px] h-[50px] flex justify-center items-center;
         }
     }
 }

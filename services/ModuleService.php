@@ -3,7 +3,7 @@
 namespace Services;
 
 use Exceptions\ModuleException;
-use Models\Module;
+use Models\ModuleModel as Module;
 use Repositories\ModuleRepository;
 
 class ModuleService {
@@ -19,17 +19,19 @@ class ModuleService {
             throw new ModuleException("Le module '{$data['name']}' est déjà installé.");
         }
 
-        $module = new Module(
+        $module = $this->moduleRepository->buildModule(
             null,
             $data['name'],
             $data['label'],
             $data['description'],
             $data['version'],
             $data['active'],
+            $data['installed'],
             $data['author'],
             $data['created_at'],
+            $data['updated_at'],
+            true // save
         );
-        $this->moduleRepository->insert(module: $module);
 
         return $module;
     }
@@ -40,6 +42,13 @@ class ModuleService {
 
     public function isModuleActive(string $moduleName): bool {
         // Logique pour vérifier si le module est actif
+        $module = $this->moduleRepository->findByName($moduleName);
+        if ($module === null) {
+            throw new ModuleException("Le module '{$moduleName}' n'existe pas.");
+        }
+        if (!$module->isActive()) {
+            throw new ModuleException("Le module '{$moduleName}' n'est pas actif.");
+        }
         return true; // Exemple simplifié
     }
 
@@ -51,7 +60,7 @@ class ModuleService {
 
     public static function getActiveModules(): array {
         $moduleRepository = new ModuleRepository();
-        return $moduleRepository->getAllActiveModules();
+        return $moduleRepository->getAllActiveModules()->toArray();
     }
 
     public static function getModuleByName(string $moduleName): ?Module {
