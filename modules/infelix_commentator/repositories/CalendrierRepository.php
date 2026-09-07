@@ -33,9 +33,9 @@ class CalendrierRepository
 
         $critere = 'username';
         $valeur = $username;
-        $query = "SELECT id_calendrier_user, password FROM calendrier_user WHERE $critere = '$valeur'";
+        $query = "SELECT id_calendrier_user, password, $critere FROM calendrier_user WHERE $critere = '$valeur' LIMIT 1";
         try {
-                $result = self::$connection->query($query);
+            $result = self::$connection->query($query);
         } catch (\Exception $e) {
             // Gérer l'exception si nécessaire
             throw new CalendrierUserException("Error while fetching configuration : " . self::$connection->errorInfo()[2]);
@@ -44,10 +44,9 @@ class CalendrierRepository
             throw new CalendrierUserException("Error while fetching configuration : " . self::$connection->errorInfo()[2]);
         }
         $config = $result->fetchObject();
-        if(is_null($config) || $config === false) {
+        if(is_null($config) || $config === false || $config->$critere !== $valeur) {
             return null;
         }
-
 
         return new CalendrierUserModel($config->id_calendrier_user);
 
@@ -92,5 +91,18 @@ class CalendrierRepository
             return null;
         }
         return $calendrierUser->getRole();
+    }
+
+    public function unlockHistoireHeroChapter(int $chapter): bool
+    {
+        if($chapter < 1 || $chapter > 24) {
+            return false; // Chapitre invalide
+        }
+        if(is_null(self::$connection)) {
+            self::$connection = CalendrierUserModel::connectBd();
+        }
+        
+
+        return true;
     }
 }

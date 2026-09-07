@@ -2,7 +2,11 @@
 
 namespace Controllers;
 
+use Entities\BasicSliderEntity;
+use Models\FormationModel;
 use Override\ControllerOverride;
+use Services\SliderService;
+
 class CvController extends ControllerOverride
 {
     protected string $name;
@@ -22,7 +26,7 @@ class CvController extends ControllerOverride
     # [Route('/cv', 'app_cv')]
     public function cv(): bool
     {
-        $formationSlider = (new Slider(FormationModel::class))->renderSlider();
+        $formationSlider = SliderService::generateSliderFromModel(FormationModel::class, 'sliderText');
         $this->renderTemplate([ 'formationSlider' => $formationSlider ]);
         return true;
     }

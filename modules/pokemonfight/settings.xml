@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Settings>
+    <Module>
+        <Name>pokemonfight</Name>
+        <Label>Pokemon Fight</Label>
+        <Version>Alpha 1.0.0</Version>
+        <Description>Module multifonctionnel pour le projet Pokemon Fight. Combat de Pokémon.</Description>
+        <Author>Infelix Commentator</Author>
+    </Module>
+</Settings>

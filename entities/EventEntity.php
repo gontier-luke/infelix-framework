@@ -1,7 +1,7 @@
 <?php
 namespace Entities;
 
-class EventEntities
+class EventEntity
 {
     /** @var int */
     private int $id;

@@ -1,0 +1,56 @@
+body.admin{
+    @apply font-['Arial',sans-serif] grid grid-cols-[10%_90%] grid-rows-[1fr] bg-gray-600;
+
+    background-image: none;
+
+    a{
+        @apply font-['Arial',sans-serif] text-white;
+        text-decoration: none;
+    }
+    header,main{
+        @apply h-full w-full;
+    }
+
+    header{
+        @apply text-lg bg-gray-800 shadow-[3px_0px_40px_-2px_#000000];
+
+        .admin-main-link-container{
+            @apply flex justify-stretch cursor-pointer pl-1.5;
+            &:hover{
+                @apply bg-gray-700;
+            }
+        } 
+
+        .admin-submenu-container{
+            @apply bg-gray-600 p-0 inset-shadow-[0px_5px_10px_-5px_#000000];
+            .admin-submenu-link{
+                @apply  px-2.5 py-1;
+                &:hover{
+                    @apply bg-gray-500;
+                }
+            }
+        }
+        
+        .admin-menu-item.logout .admin-main-link-container{
+            @apply bg-red-600/65;
+            &:hover{
+                @apply hover:bg-red-600/80;
+            }
+        }
+            
+
+        .admin-main-link-container{
+            @apply pl-2 pr-1 py-1;
+        }
+    }
+
+    main{
+        .btn{
+            @apply text-base bg-transparent border border-white rounded-md px-3 py-1 hover:bg-[#ffffff29] m-0;
+        }
+
+        .ql-editor{
+            @apply bg-white text-black;
+        }
+    }
+}

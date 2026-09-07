@@ -25,6 +25,7 @@ class Router {
         self::$adminPrefix = 'admin';
         self::$useLangSystem = Configuration::get('useLangInUrl') === '1';
         $this->getRoute();
+        // dd(self::$routes->toArray());
     }
 
     /**
@@ -95,10 +96,10 @@ class Router {
 
         $params = [];
         $route = $this->getRouteByPath($path, $params);
-        if(!$route->isEmpty() && $route->get(0)->isAdminRoute) {
+        if($route->isEmpty()) {
             $path = '/404'; // Force not found
         }
-        if(str_starts_with( $path, $adminUrlprefix)) {
+        if(isset($pathExploded[1]) && $pathExploded[1] === self::$adminPrefix) {
             $this->handleAdminRequest($adminLangPath);
             return;
         }
@@ -182,6 +183,9 @@ class Router {
     private function getRouteByPath(string $path, array &$params) : ObjectCollection
     {
         $filtered = self::$routes->filter(function($route) use ($path) {
+            if($route->isAdminRoute && str_replace(ADMIN_INDEX_PATH, self::$adminPrefix, $path) === $route->getPath()) {
+                return true;
+            } 
             return $route->getPath() === $path && (!$route->isActive && AdminService::isAdminLogged($_SESSION) || $route->isActive);
         });
         if($filtered->isEmpty()) {
@@ -190,6 +194,9 @@ class Router {
                 // dump($route->toArray());
                 $routeParams = $route->getParams();
                 if(!empty($routeParams)) {
+                    if($route->isAdminRoute){
+                        $path = str_replace(ADMIN_INDEX_PATH, self::$adminPrefix, $path);
+                    }
                     $regex = preg_quote($route->getPath(), '/');
                     foreach($routeParams as $arg) {
                         $regex = str_replace('\{' . $arg . '\}', '(.*)', $regex);

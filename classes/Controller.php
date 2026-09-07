@@ -209,34 +209,6 @@ class ControllerCore{
     protected function getSocials(): array
     {
         return [
-            'social_discord' => [
-                'link' => Configuration::get('social_discord'),
-                'icon' => AssetsService::getImageContent('picto-socials/discord', 'svg'), // Router::generateUrl('app_media_image',['path'=> 'picto-socials/discord', 'extension' => 'svg']),
-                'title' => 'Discord', 
-                'type' => 'url',
-                'iconExtension' => 'svg',
-            ],
-            'social_gamejolt' => [
-                'link' => Configuration::get('social_gamejolt'),
-                'icon' => AssetsService::getImageContent('picto-socials/gamejolt', 'svg'), // Router::generateUrl('app_media_image',['path'=> 'picto-socials/gamejolt', 'extension' => 'svg']),
-                'title' => 'Gamejolt',
-                'type' => 'url',
-                'iconExtension' => 'svg',
-            ],
-            'social_twitch' => [
-                'link' => Configuration::get('social_twitch'),
-                'icon' => AssetsService::getImageContent('picto-socials/twitch', 'svg'), // Router::generateUrl('app_media_image',['path'=> 'picto-socials/twitch', 'extension' => 'svg']),
-                'title' => 'Twitch',
-                'type' => 'url',
-                'iconExtension' => 'svg',
-            ],
-            'social_youtube' => [
-                'link' => Configuration::get('social_youtube'),
-                'icon' => AssetsService::getImageContent('picto-socials/youtube', 'svg'), // Router::generateUrl('app_media_image',['path'=> 'picto-socials/youtube', 'extension' => 'svg']),
-                'title' => 'Youtube',
-                'type' => 'url',
-                'iconExtension' => 'svg',
-            ],
         ];
     }
     protected function getBaseTemplate(): string

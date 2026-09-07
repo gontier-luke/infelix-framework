@@ -25,7 +25,8 @@ class Route
         $this->controller = $controller;
         $this->appName = $appName;
         $this->params = $params;
-        $this->isAdminRoute = str_starts_with($path, '/' . Router::$adminPrefix . '/');
+        $pathParts = explode('/', $path);
+        $this->isAdminRoute = isset($pathParts[1]) && $pathParts[1] === 'admin';
         $this->isActive = $isActive;
     }
 

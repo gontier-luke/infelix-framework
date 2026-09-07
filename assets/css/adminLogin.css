@@ -1,0 +1,17 @@
+body.adminConnexion {
+@apply flex flex-col items-center justify-center min-h-screen;
+
+   .bg-red{
+      @apply bg-[#ff000029];
+   }
+   .bg-grey{
+      @apply bg-[#ffffff29];
+   }
+   .admin-form_group{
+      @apply flex flex-col mb-4;
+      
+      .btn{
+         @apply bg-gray-500 hover:bg-gray-700 text-white text-2xl font-bold py-2 px-4 rounded;
+      }
+   }
+}

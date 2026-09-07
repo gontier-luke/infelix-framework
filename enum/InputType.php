@@ -3,11 +3,12 @@ namespace Enum;
 
 enum InputTypeEnum: string{
     case TEXT = 'text';
-    case IMAGE = 'fileupload';
+    case FILE = 'file';
     case SELECT = 'select';
     case ENUM = 'enum';
     case PASSWORD = 'password';
     case SUBMIT = 'submit';
+    case QUILLJS = 'quilljs';
     case HIDDEN = 'hidden';
     case TEXTAREA = 'textarea';
     case GROUP = 'group';
@@ -15,4 +16,7 @@ enum InputTypeEnum: string{
     case NUMBER = 'number';
     case LABEL = 'label';
     case CHECKBOX = 'checkbox';
+    case DATE = 'date';
+    case DATETIME = 'datetime-local';
+    case EMAIL = 'email';
 }

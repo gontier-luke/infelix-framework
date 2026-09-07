@@ -31,5 +31,6 @@ enum ModelColumnEnum: string
     case DECIMAL = 'DECIMAL';
     case BLOB = 'BLOB';
     case ENUM = 'ENUM';
+    case FILE = 'FILE';
 }
     
