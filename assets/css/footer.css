@@ -39,7 +39,7 @@ body{
                         }
     
                         img, svg{ 
-                            @apply max-w-full h-auto max-h-full hover:shadow transition;
+                            @apply max-w-full h-auto max-h-full hover:shadow transition hover:cursor-pointer;
                         }
                     }
                 }

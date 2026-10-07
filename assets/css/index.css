@@ -2,8 +2,10 @@
     @apply box-border;
 }
 :root{
-    --primary: #460000;  
-    --secondary: #750B0B;
+    --primary: #28093d;  
+    --secondary: #000000;
+    --third: #660000;
+    --fourth: #270369;
     --success: #28a745;
     --white: #fefefe;
     --font-color: #fefefe;
@@ -13,53 +15,69 @@ html{
     @apply w-full h-full p-0;
 
     body{
-        @apply m-0 w-full h-full bg-gradient-to-br from-(--primary) to-(--secondary) text-(--font-color) font-(--font-primary) grid grid-cols-1 grid-rows-[100px_1fr_200px];
+        @apply m-0 w-full h-full bg-linear-to-br from-(--primary) to-(--secondary) text-(--font-color) font-(--font-primary) grid grid-cols-1 grid-rows-[1fr_200px] bg-fixed;
 
-        .header-menu{
-            justify-content: space-between;
-            display: flex;
-            text-align: center;
-            background-color: rgba(0, 0, 0, 0.1);
-            color: var(--font-color);
-            font-size: 1.2em;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            text-decoration: none;
-            box-shadow: inset 0px 3px 80px -34px rgba(0, 0, 0, 0.2);
-            align-items: stretch;
-            @apply justify-between flex items-stretch text-center bg-black/10 text-(--font-color) text-lg sticky top-0 z-1000 shadow-inner;
-
-            a{
-                @apply text-(--font-color) no-underline cursor-pointer;
-            }
-            .title{
-                margin-top: 0.825rem;
-                margin-bottom: 0.825rem;
-                @apply my-3;
-            }
-            .pages{
-                @apply flex justify-center items-center flex-row w-fit items-stretch;
-
-                .pages-btn{
-                    @apply cursor-pointer flex-1 min-w-[14rem] border-l border-(--font-color) px-1 min-h-full flex justify-center items-center;
-
-                    .pages-btn:hover{
-                        @apply bg-black/40;
-                    }
-
-                    .pages-btn:first-child{
-                        @apply border-l-0 pl-0;
-                    }
-                    .pages-btn:last-child{
-                        @apply pr-0;
-                    }
+        #title-image{
+            @apply h-screen w-full  relative;
+            .great-title{
+                @apply text-9xl text-center font-bold h-full w-full block;
+                tspan{
+                    @apply text-9xl text-center font-bold stroke-2 stroke-purple-400 fill-[rgb(40_49_205_/_33%)] my-auto animate-[maigrir_1s_ease-in-out];
                 }
             }
+            .border-title{
+                @apply stroke-purple-400 stroke-3 fill-purple-400 w-2 h-10 opacity-0 ;
+            }
+
+            .title-circle{
+                @apply stroke-purple-400 stroke-4 fill-purple-400 w-30 h-30 origin-center animate-[grow_1s_ease-in-out_1500ms] scale-0 transition-transform duration-500 ;
+                animation-fill-mode: forwards;
+            }
+            .moving.title-circle{
+                @apply transform-[scale(0.5)] ;
+            }
+            .active.title-circle{
+                @apply transform-[scale(0.8)];
+            }
+        }
+
+        
+
+        .modal{
+            @apply hidden top-1/2 left-1/2 w-1/2 h-[500px] bg-black/40 z-50 fixed -translate-x-1/2 -translate-y-1/2 rounded-lg shadow-lg p-4;
+        }
+        .presentation-block{
+            @apply border-10 border-purple-400 stroke-2 rounded-2xl p-4 w-8/12 mx-auto drop-shadow-[0_0_20px,0_0_10px] drop-shadow-purple-400;
+            legend{
+                @apply text-5xl font-bold text-left ml-4 uppercase text-purple-400 ;
+            }
+            
+        }
+
+        .secondary-section{
+            @apply bg-linear-to-r from-(--third) to-(--fourth) text-2xl font-bold;
+        }
+
+        #circle{
+            @apply w-20 h-20 rounded-full bg-purple-400 absolute top-0 left-0 pointer-events-none hidden;
+        }
+
+        .moving#circle{
+            @apply block;
         }
     }
 
     body#maintenance{
         @apply flex justify-center items-center flex-col;
     }
+}
+
+@keyframes maigrir {
+    from { stroke-width: 5;}
+    to { stroke-width: 2;}
+}
+
+@keyframes grow {
+    from { scale: 0; }
+    to { scale: 1; }
 }
