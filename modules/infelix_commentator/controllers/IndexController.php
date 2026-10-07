@@ -17,6 +17,7 @@ class IndexController extends ControllerOverride
     # [Route('/', 'app_index')]
     public function index(): bool
     {
+        $this->addJS('custom');
         $this->renderTemplate();
         return true;
     }
