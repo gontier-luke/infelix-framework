@@ -12,7 +12,7 @@ class ControllerCore{
     protected array $scripts = [];
     protected string $title = 'Infelix Commentator - base';
 
-    public static function getInstanceByName(string $name) : ?ControllerCore {
+    public static function getInstanceByName(string $name, bool $isAdmin = false) : ?ControllerCore {
         
         $controllerPathes['base'] = BASE_PATH . '/controllers/';
         foreach(getAllActiveModules() as $module) {
@@ -41,6 +41,11 @@ class ControllerCore{
                 $controller->setName($name);
                 $controller->addCSS('style');
                 $controller->addJS('https://code.jquery.com/jquery-3.7.1.min.js');
+                $controller->addJS('header');
+                $controller->addJS('copy');
+                if ($isAdmin) {
+                    AdminControllerCore::configureController($controller);
+                }
                 return $controller;
             }
         }
@@ -128,7 +133,6 @@ class ControllerCore{
     protected function setFooterLinks(): array
     {
         $links = [
-            'Site réalisé par Infelix Commentator' => Router::generateUrl('app_InfelixCommentator'),
         ];
         return array_merge($links, $this->getLuckyLink());
     }
@@ -155,8 +159,6 @@ class ControllerCore{
 
     protected function renderTemplate($variables = []): void
     {
-        // $this->addJS('copy');
-
         $siteRoot = $_ENV["PROJECT_ROOT"];
         $templatesRoot = BASE_PATH.'/templates/';
         $stylesheets = $this->stylesheets;
