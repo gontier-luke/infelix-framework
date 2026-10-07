@@ -5,15 +5,18 @@
     <?php foreach ($scripts as $script) { ?>
         <script src="<?= $script ?>"></script>
     <?php } ?>
-    <div class="header-menu container-fluid">
-        <h1 class="title"><a href="<?= $indexLink ?>"><?= $siteName ?></a></h1>
+    <div class="header-menu container-fluid closed">
+        <div class="title"><a href="<?= $indexLink ?>"><?= $siteName ?></a><div class="menucross"><span></span><span></span></div></div>
         <div class="pages">
             <?php foreach ($menuLinks as $name => $link) { ?>
                 <a class="pages-btn" href="<?= $link ?>">
-                    <div>
                         <?= $name ?>
-                    </div>
-            </a>
+                </a>
             <?php } ?>
         </div>
+    </div>
+    <div class="menu-overlay">
+        <span class="menu-overlay-bar"></span>
+        <span class="menu-overlay-bar"></span>
+        <span class="menu-overlay-bar"></span>
     </div>
