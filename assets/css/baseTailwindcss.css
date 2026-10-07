@@ -6,6 +6,7 @@
 @import "./variables/typography.css" layer(theme);
 @import "./func.css" layer(components);
 @import "./slider.css" layer(components);
+@import "./header.css" layer(base);
 @import "./footer.css" layer(base);
 @import "./index.css" layer(base);
 @import "./tree.css" layer(base);

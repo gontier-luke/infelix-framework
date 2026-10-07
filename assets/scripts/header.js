@@ -1,28 +1,30 @@
 $(document).ready( function () {
 
-    let header = $('.header')[0];
+    let headerMenu = $('.header-menu');
+    let header = $('header');
+    let menuclosebutton = $('.menucross');
+    let overlay = $('.menu-overlay');
 
-    let winTop = $(window).scrollTop();
-    if (winTop > 1) {
-        headerToBubble(header);
-    }
+    menuclosebutton.on('click', function(){
+        toggleHeaderMenu(headerMenu, header);
+    });
 
-    $(window).scroll(function () {
-        let winTop = $(window).scrollTop();
-        if (winTop > 1) {
-            headerToBubble(header);
-        }
-        if (winTop < 1) {
-            headerToWide(header);
+    overlay.on('click', function(){
+        toggleHeaderMenu(headerMenu, header);
+    });
+
+    $(document).on('click', function(event) {
+        if (header.is(event.target) && !menuclosebutton.is(event.target) && !overlay.is(event.target)) {
+            toggleHeaderMenu(headerMenu, header);
         }
     });
 
 });
 
-function headerToBubble(header){
-    header.classList.add('bubble')
-}
+function toggleHeaderMenu(headerMenu, header){
+    headerMenu.toggleClass('closed');
 
-function headerToWide(header){
-    header.classList.remove('bubble')
+    setTimeout(function() {
+        header.toggleClass('closed');
+    }, 150);
 }

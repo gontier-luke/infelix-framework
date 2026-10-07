@@ -17,6 +17,8 @@ class AssetsService
                 return 'image/png';
             case 'gif':
                 return 'image/gif';
+            case 'webp':
+                return 'image/webp';
             default:
                 return null;
         }

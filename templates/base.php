@@ -8,7 +8,7 @@
     <?php } ?>
 </head>
 <body class="<?= $bodyClass ?>">
-    <header>
+    <header class="closed">
         <?php 
         require 'header.php';
         ?>
