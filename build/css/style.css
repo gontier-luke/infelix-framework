@@ -7,9 +7,13 @@
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-green-500: oklch(72.3% 0.219 149.579);
+    --color-green-600: oklch(62.7% 0.194 149.214);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-700: oklch(48.8% 0.243 264.376);
     --color-purple-400: oklch(71.4% 0.203 305.504);
+    --color-purple-500: oklch(62.7% 0.265 303.9);
+    --color-purple-800: oklch(43.8% 0.218 303.724);
+    --color-pink-500: oklch(65.6% 0.241 354.308);
     --color-gray-300: oklch(87.2% 0.01 258.338);
     --color-gray-500: oklch(55.1% 0.027 264.364);
     --color-gray-600: oklch(44.6% 0.03 256.802);
@@ -1181,6 +1185,320 @@
             height: calc(var(--spacing) * 80);
             max-height: calc(var(--spacing) * 80);
             max-width: 100%;
+          }
+        }
+      }
+    }
+  }
+}
+@layer components {
+  body.calendrier {
+    background-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-red-500) 20%, transparent);
+    }
+    .content, .container {
+      height: 100%;
+      .calendrier-container {
+        display: grid;
+        height: 100%;
+        width: 100%;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        gap: calc(var(--spacing) * 2);
+        padding: calc(var(--spacing) * 5);
+        .case {
+          display: flex;
+          height: 100%;
+          width: 100%;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+          overflow: clip;
+          border-radius: var(--radius-2xl);
+          background-color: color-mix(in srgb, oklch(63.7% 0.237 25.331) 40%, transparent);
+          @supports (color: color-mix(in lab, red, red)) {
+            background-color: color-mix(in oklab, var(--color-red-500) 40%, transparent);
+          }
+          .case-day {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-green-600);
+            font-size: var(--text-2xl);
+            line-height: var(--tw-leading, var(--text-2xl--line-height));
+            --tw-font-weight: var(--font-weight-bold);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-white);
+          }
+        }
+        .case.close {
+          &:hover {
+            @media (hover: hover) {
+              animation: secouer;
+            }
+          }
+          .case-content {
+            display: none;
+          }
+        }
+        .case.open {
+          position: relative;
+          .case-day {
+            position: absolute;
+            text-align: center;
+            transition-property: all;
+            transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+            transition-duration: var(--tw-duration, var(--default-transition-duration));
+            --tw-duration: 500ms;
+            transition-duration: 500ms;
+          }
+          .case-content {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-white);
+          }
+        }
+        .case.open:hover {
+          .case-day {
+            --tw-translate-y: -100%;
+            translate: var(--tw-translate-x) var(--tw-translate-y);
+          }
+        }
+      }
+    }
+    --tw-gradient-position: 60deg;
+    @supports (background-image: linear-gradient(in lab, red, red)) {
+      --tw-gradient-position: 60deg in oklab;
+    }
+    background-image: linear-gradient(var(--tw-gradient-stops));
+    --tw-gradient-from: var(--color-pink-500);
+    --tw-gradient-to: var(--color-purple-500);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+    .content {
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      #karaoke-container {
+        display: grid;
+        height: unset;
+        grid-template-rows: 1fr auto;
+        align-items: center;
+        justify-content: center;
+        gap: 0px;
+        overflow: hidden;
+        border-radius: var(--radius-2xl);
+        .video-overlay {
+          position: relative;
+          display: flex;
+          height: 800px;
+          width: 100%;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: calc(var(--spacing) * 5);
+          border-style: var(--tw-border-style);
+          border-width: 2px;
+          border-color: var(--color-black);
+          background-color: var(--color-black);
+          #karaoke-video {
+            height: auto;
+            width: 100%;
+            overflow: hidden;
+            border-radius: var(--radius-2xl);
+            object-fit: contain;
+          }
+          .pause-overlay-content {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            display: flex;
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            background-color: color-mix(in srgb, #000 50%, transparent);
+            @supports (color: color-mix(in lab, red, red)) {
+              background-color: color-mix(in oklab, var(--color-black) 50%, transparent);
+            }
+            opacity: 100%;
+            transition-property: opacity;
+            transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+            transition-duration: var(--tw-duration, var(--default-transition-duration));
+            --tw-duration: 1000ms;
+            transition-duration: 1000ms;
+            .pause_icon, .play_icon {
+              height: calc(var(--spacing) * 24);
+              width: calc(var(--spacing) * 24);
+              fill: var(--color-white) !important;
+            }
+            .pause_icon {
+              display: block;
+              opacity: 100%;
+            }
+            .play_icon {
+              display: none;
+              opacity: 0%;
+            }
+          }
+          .pause-overlay-content.playing {
+            opacity: 0%;
+            .pause_icon {
+              display: none;
+              opacity: 0%;
+            }
+            .play_icon {
+              display: block;
+              opacity: 100%;
+            }
+          }
+        }
+        .karaoke-controls {
+          display: grid;
+          width: 100%;
+          grid-template-columns: auto 1fr auto auto auto;
+          align-items: center;
+          justify-content: stretch;
+          gap: 0px;
+          background-color: color-mix(in srgb, #fff 50%, transparent);
+          @supports (color: color-mix(in lab, red, red)) {
+            background-color: color-mix(in oklab, var(--color-white) 50%, transparent);
+          }
+          .pause-controls {
+            .pause_icon {
+              display: block;
+              opacity: 100%;
+            }
+            .play_icon {
+              display: none;
+              opacity: 0%;
+            }
+          }
+          .pause-controls.playing {
+            .pause_icon {
+              display: none;
+              opacity: 0%;
+            }
+            .play_icon {
+              display: block;
+              opacity: 100%;
+            }
+          }
+          .volume-button.highvolume {
+            .highvolume_icon {
+              display: block;
+            }
+            .lowvolume_icon {
+              display: none;
+            }
+            .mutevolume_icon {
+              display: none;
+            }
+          }
+          .volume-button.muted {
+            .highvolume_icon {
+              display: none;
+            }
+            .lowvolume_icon {
+              display: none;
+            }
+            .mutevolume_icon {
+              display: block;
+            }
+          }
+          .volume-button.lowvolume {
+            .highvolume_icon {
+              display: none;
+            }
+            .lowvolume_icon {
+              display: block;
+            }
+            .mutevolume_icon {
+              display: none;
+            }
+          }
+          .voix-button.muted {
+            .unmute_icon {
+              display: none;
+            }
+            .mute_icon {
+              display: block;
+            }
+          }
+          .voix-button.unmute {
+            .unmute_icon {
+              display: block;
+            }
+            .mute_icon {
+              display: none;
+            }
+          }
+          .deployable {
+            position: relative;
+            .karaoke-volume {
+              position: absolute;
+              top: -310%;
+              left: 0px;
+              display: none;
+              height: 200px;
+              align-items: center;
+              justify-content: center;
+              border-top-left-radius: var(--radius-lg);
+              border-top-right-radius: var(--radius-lg);
+              background-color: color-mix(in srgb, #fff 50%, transparent);
+              @supports (color: color-mix(in lab, red, red)) {
+                background-color: color-mix(in oklab, var(--color-white) 50%, transparent);
+              }
+              padding-inline: calc(var(--spacing) * 5);
+              padding-block: calc(var(--spacing) * 2);
+              input[type="range"] {
+                height: 100%;
+                width: 17px;
+                rotate: 180deg;
+                background-color: var(--color-white);
+                writing-mode: vertical-rl;
+              }
+            }
+          }
+          .deployable:hover .karaoke-volume {
+            display: flex;
+          }
+          .karaoke-button {
+            display: flex;
+            height: 100%;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            object-fit: cover;
+            padding: calc(var(--spacing) * 5);
+            transition-property: all;
+            transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+            transition-duration: var(--tw-duration, var(--default-transition-duration));
+            --tw-duration: 300ms;
+            transition-duration: 300ms;
+            &:hover {
+              @media (hover: hover) {
+                background-color: color-mix(in srgb, #fff 50%, transparent);
+                @supports (color: color-mix(in lab, red, red)) {
+                  background-color: color-mix(in oklab, var(--color-white) 50%, transparent);
+                }
+              }
+            }
+            .karaoke-icon {
+              height: auto;
+              width: calc(var(--spacing) * 5);
+              fill: var(--color-purple-800);
+            }
+          }
+          #replay-button {
+            stroke: var(--color-purple-800);
+            stroke-width: 1;
           }
         }
       }

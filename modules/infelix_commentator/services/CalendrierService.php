@@ -8,6 +8,7 @@ use Enum\CalendrierUserRoleEnum;
 use Exceptions\CalendrierServiceException;
 use Exceptions\CalendrierUserException;
 use Repositories\CalendrierRepository;
+use Services\AssetsService;
 
 /**
  * Service pour la gestion de l'interface d'administration
@@ -78,7 +79,7 @@ class CalendrierService
         }
 
         $_SESSION['calendrier_token'] = self::generateToken(session_id());
-        $_SESSION['calendrier_user_role'] = $calendrierRepo->getUserRole($username);
+        $_SESSION['calendrier_user_role'] = $calendrierRepo->getUserRole($username)->value ?? CalendrierUserRoleEnum::JOUEUR->value;
 
         return true;
     }
@@ -157,7 +158,7 @@ class CalendrierService
 
     public static function verifyGameAccess(CalendrierGameEnum $game): bool
     {
-        if(isset($_SESSION['calendrier_user_role']) && $_SESSION['calendrier_user_role'] === CalendrierUserRoleEnum::BETA_TEST) {
+        if(isset($_SESSION['calendrier_user_role']) && $_SESSION['calendrier_user_role'] === CalendrierUserRoleEnum::BETA_TEST->value) {
             return true;
         }
         $firstAccess = self::getFirstAccessToGame($game);
@@ -234,9 +235,42 @@ class CalendrierService
         foreach($folders as $folder) {
             $karaokeVideos = array_merge($karaokeVideos, AssetsService::getAllVideosRelativeInFolder('karaoke/' . $folder));
         }
+        if(empty($karaokeVideos)) {
+            dd("Aucune vidéo de karaoké disponible pour les jours spécifiés.");
+        }
         $selectedKaraoke = $karaokeVideos[array_rand($karaokeVideos)];
         $videoURL = Router::generateUrl('app_media_video', ['path' => $selectedKaraoke['name'], 'extension' => $selectedKaraoke['extension']]);
         $audioURL = Router::generateUrl('app_media_audio', ['path' => $selectedKaraoke['name'], 'extension' => 'mp3']);
         return ['video' => $videoURL, 'audio' => $audioURL];
+    }
+
+    public static function getCasesForCurrentDate(): array
+    {
+        $currentDay = (int) (new \DateTime())->format('d');
+        $cases = [];
+        foreach(self::$dates as $day => $data) {
+            $isOpen = $currentDay >= $day;
+            $cases[] = [
+                'day' => $day,
+                'is_open' => $isOpen,
+                'content' => $data['game']->value . ' !',
+                'route' => Router::generateUrl($data['game']->getRouteName()),
+            ];
+        }
+        return $cases;
+    }
+
+    public static function getKaraokeIcons(): array
+    {
+        return [
+            'muteicon' => AssetsService::getImageContent('karaoke-picto/mute', 'svg'),
+            'unmuteicon' => AssetsService::getImageContent('karaoke-picto/unmute', 'svg'),
+            'pauseicon' => AssetsService::getImageContent('karaoke-picto/pause', 'svg'),
+            'playicon' => AssetsService::getImageContent('karaoke-picto/play', 'svg'),
+            'replayicon' => AssetsService::getImageContent('karaoke-picto/replay', 'svg'),
+            'lowvolumeicon' => AssetsService::getImageContent('karaoke-picto/volume-low', 'svg'),
+            'highvolumeicon' => AssetsService::getImageContent('karaoke-picto/volume-high', 'svg'),
+            'mutevolumeicon' => AssetsService::getImageContent('karaoke-picto/volume-x', 'svg'),
+        ];
     }
 }

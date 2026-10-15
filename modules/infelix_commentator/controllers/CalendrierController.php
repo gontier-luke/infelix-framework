@@ -9,6 +9,7 @@ use Services\CalendrierService;
 use Enum\CalendrierGameEnum;
 use Enum\InputTypeEnum;
 use Modules\PokemonFight\Enums\TrainerEnum;
+use Override;
 
 class CalendrierController extends ControllerOverride
 {
@@ -28,9 +29,10 @@ class CalendrierController extends ControllerOverride
             return false;
         }
         $this->renderTemplate([
-            'cases' => [],
+            'cases' => CalendrierService::getCasesForCurrentDate(),
             'deconnexion_url' => Router::generateUrl('app_calendrier_deconnexion'),
-        ]);
+             'nofooter' => true,
+       ]);
         return true;
     }
 
@@ -77,7 +79,9 @@ class CalendrierController extends ControllerOverride
             return false;
         }
         $this->template = 'histoire_hero.php';
-        $this->renderTemplate([]);
+        $this->renderTemplate([
+            'nofooter' => true,
+        ]);
         return true;
     }
 
@@ -93,14 +97,16 @@ class CalendrierController extends ControllerOverride
         return true;
     }
 
-    # [Route('/calendrier/dessine-avec-moi', 'app_calendrier_dessine_avec_moi')]
+    # [Route('/calendrier/dessine-avec-moi', 'app_calendrier_dessins')]
     public function dessineAvecMoi(): bool{
         if(!CalendrierService::verifyGameAccess(CalendrierGameEnum::DESSINS)) {
             Router::redirect('app_calendrier');
             return false;
         }
         $this->template = 'dessineAvecMoi.php';
-        $this->renderTemplate(['model' => CalendrierService::getARandomModelToDraw((int) (new \DateTime())->format('d'))]);
+        $this->renderTemplate([
+            'nofooter' => true,
+            'model' => CalendrierService::getARandomModelToDraw((int) (new \DateTime())->format('d'))]);
         return true;
     }
 
@@ -119,6 +125,7 @@ class CalendrierController extends ControllerOverride
             'pioupiou_down' => Router::generateUrl('app_media_image', ['path' => 'pioupiou/pioupiou_down', 'extension' => 'png']),
             'pioupiou_pipe' => Router::generateUrl('app_media_image', ['path' => 'pioupiou/pioupiou_pipe', 'extension' => 'png']),
             'pioupiou_bg' => Router::generateUrl('app_media_image', ['path' => 'pioupiou/pioupiou_bg', 'extension' => 'png']),
+            'nofooter' => true,
         ]);
         return true;
     }
@@ -138,9 +145,8 @@ class CalendrierController extends ControllerOverride
         $this->renderTemplate([
             'karaoke_video' => $karaoke_video,
             'karaoke_luke' => $karaoke_audio,
-            'mute' => Router::generateUrl('app_media_image', ['path' => 'karaoke/mute', 'extension' => 'png']),
-            'unmute' => Router::generateUrl('app_media_image', ['path' => 'karaoke/unmute', 'extension' => 'png']),
-            'pause' => Router::generateUrl('app_media_image', ['path' => 'karaoke/pause', 'extension' => 'png']),
+            'nofooter' => true,
+            'icons' => CalendrierService::getKaraokeIcons(),
         ]);
         return true;
     }
@@ -157,6 +163,7 @@ class CalendrierController extends ControllerOverride
         $this->template = 'pokemon.php';
         $this->addJS('pokemon');
         $this->renderTemplate([
+            'nofooter' => true,
         ]);
         return true;
     }
@@ -172,7 +179,21 @@ class CalendrierController extends ControllerOverride
         $this->template = 'luklicker.php';
         $this->addJS('luklicker');
         $this->renderTemplate([
+            'nofooter' => true,
         ]);
         return true;
+    }
+
+    protected function getSiteName(): string
+    {
+        return 'Calendrier de l\'Avent';
+    }
+
+    #[Override]
+    protected function setMenuLinks(): array
+    {
+        return [
+            'Calendrier' => Router::generateUrl('app_calendrier'),
+        ];
     }
 }

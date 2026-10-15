@@ -37,4 +37,9 @@ enum CalendrierGameEnum: string
             self::DESSINS => 'dessins',
         };
     }
+
+    public function getRouteName(): string
+    {
+        return 'app_calendrier_' . $this->getSimpleName();
+    }
 }

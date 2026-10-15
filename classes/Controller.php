@@ -190,6 +190,8 @@ class ControllerCore{
 
         $bodyClass = $this->getBodyClass();
 
+        $nofooter = false;
+
         foreach($variables as $varName => $varValue){
             $$varName = $varValue;
         }

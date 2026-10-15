@@ -16,10 +16,12 @@
     <main>
         <?php  eval('?>' . $content); ?>
     </main>
-    <footer class="footer container-fluid">
-        <?php
-         require 'footer.php';
-        ?>
-    </footer>
+    <?php if($nofooter !== true){ ?>
+        <footer class="footer container-fluid">
+            <?php
+            require 'footer.php';
+            ?>
+        </footer>
+    <?php } ?>
 </body>
 </html>

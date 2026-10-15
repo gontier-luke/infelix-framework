@@ -11,6 +11,7 @@
 @import "./index.css" layer(base);
 @import "./tree.css" layer(base);
 @import "./admin.css" layer(base);
+@import "./calendrier/calendrier.css" layer(components);
 
 @source '../../templates/';
 @source '../../controllers/';

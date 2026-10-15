@@ -2,7 +2,6 @@
 
 namespace Repositories;
 
-use Classes\ModelCore;
 use Enum\CalendrierUserRoleEnum;
 use Models\CalendrierUserModel;
 use Exceptions\CalendrierUserException;
@@ -28,7 +27,7 @@ class CalendrierRepository
             return null;
         }
         if(is_null(self::$connection)) {
-            self::$connection = CalendrierUserModel::connectBd();
+            self::$connection = CalendrierUserModel::getConnection();
         }
 
         $critere = 'username';

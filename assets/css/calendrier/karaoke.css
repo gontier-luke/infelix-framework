@@ -1,0 +1,144 @@
+body.calendrier {
+    @apply bg-linear-60 from-pink-500 to-purple-500;
+
+    .content{
+        @apply h-screen flex justify-center items-center;
+        
+
+        #karaoke-container {
+            @apply grid grid-rows-[1fr_auto] gap-0 justify-center items-center rounded-2xl overflow-hidden h-[unset];
+
+            
+            .video-overlay {
+                @apply relative h-[800px] w-full border-black border-2 flex flex-col justify-center items-center gap-5 bg-black ;
+                
+                #karaoke-video {
+                    @apply w-full h-auto rounded-2xl overflow-hidden object-contain  ;
+                }
+                .pause-overlay-content {
+                    @apply flex justify-center items-center absolute top-0 left-0 w-full h-full bg-black/50 opacity-100 transition-opacity duration-1000  ;
+
+                    .pause_icon, .play_icon {
+                        @apply w-24 h-24 fill-white!;
+                    }
+
+                    .pause_icon {
+                        @apply opacity-100 block;
+                    }
+                    .play_icon {
+                        @apply opacity-0 hidden;
+                    }
+                }
+
+                .pause-overlay-content.playing {
+                    @apply opacity-0;
+
+                    .pause_icon {
+                        @apply hidden opacity-0;
+                    }
+                    .play_icon {
+                        @apply block opacity-100;
+                    }
+                }
+            }
+
+
+            .karaoke-controls {
+                @apply grid grid-cols-[auto_1fr_auto_auto_auto] justify-stretch items-center gap-0 bg-white/50 w-full;
+
+                .pause-controls{
+                    .pause_icon{
+                        @apply opacity-100 block;
+                    }
+                    .play_icon{
+                        @apply opacity-0 hidden;
+                    }
+                }
+
+                .pause-controls.playing {
+                    .pause_icon{
+                        @apply hidden opacity-0;
+                    }
+                    .play_icon{
+                        @apply block opacity-100;
+                    }
+                }
+
+                .volume-button.highvolume {
+                    .highvolume_icon {
+                        @apply block;
+                    }
+                    .lowvolume_icon {
+                        @apply hidden;
+                    }
+                    .mutevolume_icon {
+                        @apply hidden;
+                    }
+                }
+                .volume-button.muted {
+                    .highvolume_icon {
+                        @apply hidden;
+                    }
+                    .lowvolume_icon {
+                        @apply hidden;
+                    }
+                    .mutevolume_icon {
+                        @apply block;
+                    }
+                }
+                .volume-button.lowvolume {
+                    .highvolume_icon {
+                        @apply hidden;
+                    }
+                    .lowvolume_icon {
+                        @apply block;
+                    }
+                    .mutevolume_icon {
+                        @apply hidden;
+                    }
+                }
+                .voix-button.muted {
+                    .unmute_icon {
+                        @apply hidden;
+                    }
+                    .mute_icon {
+                        @apply block;
+                    }
+                }
+                .voix-button.unmute {
+                    .unmute_icon {
+                        @apply block;
+                    }
+                    .mute_icon {
+                        @apply hidden;
+                    }
+                }
+                .deployable {
+                    @apply relative;
+                    .karaoke-volume {
+                        @apply hidden absolute h-[200px] top-[-310%] left-0 px-5 py-2 bg-white/50 rounded-t-lg justify-center items-center;
+
+                        input[type="range"] {
+                            @apply h-full w-[17px] bg-white rotate-180;
+
+                            writing-mode: vertical-rl;
+                        }
+                    }
+                }
+                .deployable:hover .karaoke-volume {
+                    @apply flex;
+                }
+
+                .karaoke-button {
+                    @apply h-full object-cover flex justify-center items-center cursor-pointer transition-all duration-300 hover:bg-white/50 p-5;
+                    .karaoke-icon {
+                        @apply w-5 h-auto fill-purple-800;
+                    }
+                }
+                #replay-button {
+                    @apply stroke-1 stroke-purple-800;
+                }
+            }
+        }
+    }
+}
