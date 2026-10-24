@@ -1,6 +1,6 @@
 <div class="footer-content">
     <div class="top">
-        <p class="my-0">Histoires d'Autres Mondes - site du Chevalier Connard</p>
+        <p class="my-0">Site produit par Infelix Commentator</p>
     </div>
     <div class="bottom">
         <ul class="footer-content__pages justify-center pl-0">
